@@ -1,0 +1,1616 @@
+{
+ "rows": {
+  "specializations": [
+   {
+    "id": "sp1",
+    "name": "Cardiology",
+    "description": "Heart health, blood pressure and cardiac care.",
+    "icon": "HeartPulse"
+   },
+   {
+    "id": "sp2",
+    "name": "Dermatology",
+    "description": "Skin, hair and nail conditions and treatments.",
+    "icon": "Sparkles"
+   },
+   {
+    "id": "sp3",
+    "name": "Neurology",
+    "description": "Brain, spine and nervous system disorders.",
+    "icon": "Brain"
+   },
+   {
+    "id": "sp4",
+    "name": "Pediatrics",
+    "description": "Healthcare for infants, children and teenagers.",
+    "icon": "Baby"
+   },
+   {
+    "id": "sp5",
+    "name": "Orthopedics",
+    "description": "Bones, joints, muscles and sports injuries.",
+    "icon": "Bone"
+   },
+   {
+    "id": "sp6",
+    "name": "Dentistry",
+    "description": "Dental checkups, braces, implants and oral care.",
+    "icon": "Smile"
+   },
+   {
+    "id": "sp7",
+    "name": "General Medicine",
+    "description": "Primary care for everyday health concerns.",
+    "icon": "Stethoscope"
+   },
+   {
+    "id": "sp8",
+    "name": "Gynecology",
+    "description": "Women's health, pregnancy and reproductive care.",
+    "icon": "Flower2"
+   }
+  ],
+  "doctors": [
+   {
+    "id": "d1",
+    "name": "Dr. Ayesha Khan",
+    "email": "doctor@medivance.pk",
+    "phone": "+92 300 5501107",
+    "specialization": "Cardiology",
+    "qualification": "MBBS, FCPS (Cardiology)",
+    "experience": 14,
+    "rating": 4.9,
+    "fee": 3000,
+    "languages": [
+     "English",
+     "Urdu",
+     "Sindhi"
+    ],
+    "bio": "Consultant cardiologist focused on preventive cardiology, hypertension and heart failure management. Believes in clear explanations and long-term lifestyle plans.",
+    "photo": "/doctors/d1.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d2",
+    "name": "Dr. Hassan Raza",
+    "email": "doctor2@medivance.pk",
+    "phone": "+92 300 5502114",
+    "specialization": "General Medicine",
+    "qualification": "MBBS, MRCP",
+    "experience": 15,
+    "rating": 4.8,
+    "fee": 2000,
+    "languages": [
+     "English",
+     "Urdu",
+     "Punjabi"
+    ],
+    "bio": "Experienced general physician providing primary care, chronic condition checkups, and routine wellness screenings.",
+    "photo": "/doctors/d2.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d3",
+    "name": "Dr. Sara Ahmed",
+    "email": "doctor3@medivance.pk",
+    "phone": "+92 300 5503121",
+    "specialization": "Dermatology",
+    "qualification": "MBBS, MCPS (Dermatology)",
+    "experience": 12,
+    "rating": 4.7,
+    "fee": 2800,
+    "languages": [
+     "English",
+     "Urdu"
+    ],
+    "bio": "Skin specialist for acne, eczema, pigmentation, hair loss and cosmetic dermatology.",
+    "photo": "/doctors/d3.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d4",
+    "name": "Dr. Kamran Siddiqui",
+    "email": "doctor4@medivance.pk",
+    "phone": "+92 300 5504128",
+    "specialization": "Orthopedics",
+    "qualification": "MBBS, FRCS (Orthopedics)",
+    "experience": 18,
+    "rating": 4.9,
+    "fee": 4000,
+    "languages": [
+     "English",
+     "Urdu"
+    ],
+    "bio": "Joint replacement and sports injury surgeon with nearly two decades of experience.",
+    "photo": "/doctors/d4.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d5",
+    "name": "Dr. Maria Fatima",
+    "email": "doctor5@medivance.pk",
+    "phone": "+92 300 5505135",
+    "specialization": "Pediatrics",
+    "qualification": "MBBS, FCPS (Pediatrics)",
+    "experience": 10,
+    "rating": 4.8,
+    "fee": 2000,
+    "languages": [
+     "English",
+     "Urdu",
+     "Sindhi"
+    ],
+    "bio": "Child health, vaccination schedules, growth monitoring and common childhood illnesses.",
+    "photo": "/doctors/d5.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d6",
+    "name": "Dr. Zeeshan Ali",
+    "email": "doctor6@medivance.pk",
+    "phone": "+92 300 5506142",
+    "specialization": "Dentistry",
+    "qualification": "BDS, MDS (Orthodontics)",
+    "experience": 8,
+    "rating": 4.6,
+    "fee": 2200,
+    "languages": [
+     "English",
+     "Urdu"
+    ],
+    "bio": "Orthodontics, smile design, root canal treatment and routine dental care.",
+    "photo": "/doctors/d6.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d7",
+    "name": "Dr. Nadir Hussain",
+    "email": "doctor7@medivance.pk",
+    "phone": "+92 300 5507149",
+    "specialization": "General Medicine",
+    "qualification": "MBBS, MRCP",
+    "experience": 11,
+    "rating": 4.7,
+    "fee": 1800,
+    "languages": [
+     "English",
+     "Urdu",
+     "Sindhi"
+    ],
+    "bio": "Family physician for fevers, infections, diabetes and general health checkups.",
+    "photo": "/doctors/d7.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d8",
+    "name": "Dr. Rabia Shah",
+    "email": "doctor8@medivance.pk",
+    "phone": "+92 300 5508156",
+    "specialization": "Gynecology",
+    "qualification": "MBBS, FCPS (Gynecology)",
+    "experience": 13,
+    "rating": 4.9,
+    "fee": 3200,
+    "languages": [
+     "English",
+     "Urdu"
+    ],
+    "bio": "Obstetrics and women's health, antenatal care and minimally invasive gynecological procedures.",
+    "photo": "/doctors/d8.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d9",
+    "name": "Dr. Faisal Mehmood",
+    "email": "doctor9@medivance.pk",
+    "phone": "+92 300 5509163",
+    "specialization": "Cardiology",
+    "qualification": "MBBS, MRCP (Cardiology)",
+    "experience": 7,
+    "rating": 4.5,
+    "fee": 2800,
+    "languages": [
+     "English",
+     "Urdu"
+    ],
+    "bio": "Echocardiography, ECG interpretation and cardiac rehabilitation programs.",
+    "photo": "/doctors/d9.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d10",
+    "name": "Dr. Sana Iqbal",
+    "email": "doctor10@medivance.pk",
+    "phone": "+92 300 5510170",
+    "specialization": "Dermatology",
+    "qualification": "MBBS, FCPS (Dermatology)",
+    "experience": 6,
+    "rating": 4.6,
+    "fee": 2300,
+    "languages": [
+     "English",
+     "Urdu"
+    ],
+    "bio": "Medical dermatology, laser treatments and allergy-related skin problems.",
+    "photo": "/doctors/d10.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d11",
+    "name": "Dr. Owais Rehman",
+    "email": "doctor11@medivance.pk",
+    "phone": "+92 300 5511177",
+    "specialization": "Pediatrics",
+    "qualification": "MBBS, DCH",
+    "experience": 5,
+    "rating": 4.4,
+    "fee": 1700,
+    "languages": [
+     "English",
+     "Urdu",
+     "Pashto"
+    ],
+    "bio": "Newborn care, nutrition guidance and paediatric allergies.",
+    "photo": "/doctors/d11.jpg",
+    "slot_minutes": 30
+   },
+   {
+    "id": "d12",
+    "name": "Dr. Adnan Javed",
+    "email": "doctor12@medivance.pk",
+    "phone": "+92 300 5512184",
+    "specialization": "General Medicine",
+    "qualification": "MBBS, FCPS (Medicine)",
+    "experience": 15,
+    "rating": 4.8,
+    "fee": 2000,
+    "languages": [
+     "English",
+     "Urdu"
+    ],
+    "bio": "Internal medicine with a focus on chronic disease management and preventive screening.",
+    "photo": "/doctors/d12.jpg",
+    "slot_minutes": 30
+   }
+  ],
+  "patients": [
+   {
+    "id": "p1",
+    "name": "Esha Kewalramani",
+    "email": "patient@medivance.pk",
+    "phone": "+92 321 7701211",
+    "dob": "2003-04-18",
+    "gender": "Female",
+    "address": "Hyderabad, Sindh",
+    "blood_group": "B+",
+    "registered_at": "2026-07-19T09:00:00.000Z"
+   },
+   {
+    "id": "p2",
+    "name": "Ali Raza",
+    "email": "patient2@mail.com",
+    "phone": "+92 321 7702222",
+    "dob": "1990-02-11",
+    "gender": "Male",
+    "address": "Karachi, Sindh",
+    "blood_group": "O+",
+    "registered_at": "2026-08-08T09:00:00.000Z"
+   },
+   {
+    "id": "p3",
+    "name": "Fatima Noor",
+    "email": "patient3@mail.com",
+    "phone": "+92 321 7703233",
+    "dob": "1985-07-23",
+    "gender": "Female",
+    "address": "Karachi, Sindh",
+    "blood_group": "AB+",
+    "registered_at": "2026-08-18T09:00:00.000Z"
+   },
+   {
+    "id": "p4",
+    "name": "Hamza Sheikh",
+    "email": "patient4@mail.com",
+    "phone": "+92 321 7704244",
+    "dob": "1998-12-02",
+    "gender": "Male",
+    "address": "Sukkur, Sindh",
+    "blood_group": "O-",
+    "registered_at": "2026-09-02T09:00:00.000Z"
+   },
+   {
+    "id": "p5",
+    "name": "Zainab Malik",
+    "email": "patient5@mail.com",
+    "phone": "+92 321 7705255",
+    "dob": "1976-09-30",
+    "gender": "Female",
+    "address": "Hyderabad, Sindh",
+    "blood_group": "A-",
+    "registered_at": "2026-09-17T09:00:00.000Z"
+   },
+   {
+    "id": "p6",
+    "name": "Usman Tariq",
+    "email": "patient6@mail.com",
+    "phone": "+92 321 7706266",
+    "dob": "2001-05-14",
+    "gender": "Male",
+    "address": "Larkana, Sindh",
+    "blood_group": "A+",
+    "registered_at": "2026-09-29T09:00:00.000Z"
+   },
+   {
+    "id": "p7",
+    "name": "Mehwish Arain",
+    "email": "patient7@mail.com",
+    "phone": "+92 321 7707277",
+    "dob": "1993-01-08",
+    "gender": "Female",
+    "address": "Karachi, Sindh",
+    "blood_group": "B+",
+    "registered_at": "2026-10-14T09:00:00.000Z"
+   },
+   {
+    "id": "p8",
+    "name": "Danish Lakhani",
+    "email": "patient8@mail.com",
+    "phone": "+92 321 7708288",
+    "dob": "1969-11-19",
+    "gender": "Male",
+    "address": "Hyderabad, Sindh",
+    "blood_group": "O+",
+    "registered_at": "2026-10-26T09:00:00.000Z"
+   },
+   {
+    "id": "p9",
+    "name": "Sobia Memon",
+    "email": "patient9@mail.com",
+    "phone": "+92 321 7709299",
+    "dob": "2010-03-27",
+    "gender": "Female",
+    "address": "Nawabshah, Sindh",
+    "blood_group": "AB+",
+    "registered_at": "2026-11-04T09:00:00.000Z"
+   },
+   {
+    "id": "p10",
+    "name": "Rizwan Bhatti",
+    "email": "patient10@mail.com",
+    "phone": "+92 321 7710310",
+    "dob": "1982-06-05",
+    "gender": "Male",
+    "address": "Karachi, Sindh",
+    "blood_group": "O-",
+    "registered_at": "2026-11-11T09:00:00.000Z"
+   }
+  ],
+  "availability": [
+   {
+    "id": "w1_0",
+    "doctor_id": "d1",
+    "day": "Mon",
+    "start_time": "09:00",
+    "end_time": "13:00"
+   },
+   {
+    "id": "w1_1",
+    "doctor_id": "d1",
+    "day": "Tue",
+    "start_time": "09:00",
+    "end_time": "13:00"
+   },
+   {
+    "id": "w1_2",
+    "doctor_id": "d1",
+    "day": "Wed",
+    "start_time": "09:00",
+    "end_time": "13:00"
+   },
+   {
+    "id": "w1_3",
+    "doctor_id": "d1",
+    "day": "Thu",
+    "start_time": "09:00",
+    "end_time": "13:00"
+   },
+   {
+    "id": "w1_4",
+    "doctor_id": "d1",
+    "day": "Fri",
+    "start_time": "09:00",
+    "end_time": "13:00"
+   },
+   {
+    "id": "w2a_0",
+    "doctor_id": "d2",
+    "day": "Mon",
+    "start_time": "10:00",
+    "end_time": "14:00"
+   },
+   {
+    "id": "w2a_1",
+    "doctor_id": "d2",
+    "day": "Wed",
+    "start_time": "10:00",
+    "end_time": "14:00"
+   },
+   {
+    "id": "w2a_2",
+    "doctor_id": "d2",
+    "day": "Fri",
+    "start_time": "10:00",
+    "end_time": "14:00"
+   },
+   {
+    "id": "w2b_0",
+    "doctor_id": "d2",
+    "day": "Sat",
+    "start_time": "10:00",
+    "end_time": "12:00"
+   },
+   {
+    "id": "w3_0",
+    "doctor_id": "d3",
+    "day": "Tue",
+    "start_time": "14:00",
+    "end_time": "18:00"
+   },
+   {
+    "id": "w3_1",
+    "doctor_id": "d3",
+    "day": "Wed",
+    "start_time": "14:00",
+    "end_time": "18:00"
+   },
+   {
+    "id": "w3_2",
+    "doctor_id": "d3",
+    "day": "Thu",
+    "start_time": "14:00",
+    "end_time": "18:00"
+   },
+   {
+    "id": "w3_3",
+    "doctor_id": "d3",
+    "day": "Sat",
+    "start_time": "14:00",
+    "end_time": "18:00"
+   },
+   {
+    "id": "w4_0",
+    "doctor_id": "d4",
+    "day": "Mon",
+    "start_time": "11:00",
+    "end_time": "15:00"
+   },
+   {
+    "id": "w4_1",
+    "doctor_id": "d4",
+    "day": "Tue",
+    "start_time": "11:00",
+    "end_time": "15:00"
+   },
+   {
+    "id": "w4_2",
+    "doctor_id": "d4",
+    "day": "Wed",
+    "start_time": "11:00",
+    "end_time": "15:00"
+   },
+   {
+    "id": "w4_3",
+    "doctor_id": "d4",
+    "day": "Thu",
+    "start_time": "11:00",
+    "end_time": "15:00"
+   },
+   {
+    "id": "w4_4",
+    "doctor_id": "d4",
+    "day": "Fri",
+    "start_time": "11:00",
+    "end_time": "15:00"
+   },
+   {
+    "id": "w5_0",
+    "doctor_id": "d5",
+    "day": "Mon",
+    "start_time": "09:30",
+    "end_time": "13:30"
+   },
+   {
+    "id": "w5_1",
+    "doctor_id": "d5",
+    "day": "Tue",
+    "start_time": "09:30",
+    "end_time": "13:30"
+   },
+   {
+    "id": "w5_2",
+    "doctor_id": "d5",
+    "day": "Wed",
+    "start_time": "09:30",
+    "end_time": "13:30"
+   },
+   {
+    "id": "w5_3",
+    "doctor_id": "d5",
+    "day": "Thu",
+    "start_time": "09:30",
+    "end_time": "13:30"
+   },
+   {
+    "id": "w5_4",
+    "doctor_id": "d5",
+    "day": "Sat",
+    "start_time": "09:30",
+    "end_time": "13:30"
+   },
+   {
+    "id": "w6_0",
+    "doctor_id": "d6",
+    "day": "Mon",
+    "start_time": "15:00",
+    "end_time": "19:00"
+   },
+   {
+    "id": "w6_1",
+    "doctor_id": "d6",
+    "day": "Tue",
+    "start_time": "15:00",
+    "end_time": "19:00"
+   },
+   {
+    "id": "w6_2",
+    "doctor_id": "d6",
+    "day": "Wed",
+    "start_time": "15:00",
+    "end_time": "19:00"
+   },
+   {
+    "id": "w6_3",
+    "doctor_id": "d6",
+    "day": "Thu",
+    "start_time": "15:00",
+    "end_time": "19:00"
+   },
+   {
+    "id": "w6_4",
+    "doctor_id": "d6",
+    "day": "Fri",
+    "start_time": "15:00",
+    "end_time": "19:00"
+   },
+   {
+    "id": "w7_0",
+    "doctor_id": "d7",
+    "day": "Mon",
+    "start_time": "09:00",
+    "end_time": "12:00"
+   },
+   {
+    "id": "w7_1",
+    "doctor_id": "d7",
+    "day": "Tue",
+    "start_time": "09:00",
+    "end_time": "12:00"
+   },
+   {
+    "id": "w7_2",
+    "doctor_id": "d7",
+    "day": "Wed",
+    "start_time": "09:00",
+    "end_time": "12:00"
+   },
+   {
+    "id": "w7_3",
+    "doctor_id": "d7",
+    "day": "Thu",
+    "start_time": "09:00",
+    "end_time": "12:00"
+   },
+   {
+    "id": "w7_4",
+    "doctor_id": "d7",
+    "day": "Fri",
+    "start_time": "09:00",
+    "end_time": "12:00"
+   },
+   {
+    "id": "w7_5",
+    "doctor_id": "d7",
+    "day": "Sat",
+    "start_time": "09:00",
+    "end_time": "12:00"
+   },
+   {
+    "id": "w8_0",
+    "doctor_id": "d8",
+    "day": "Tue",
+    "start_time": "10:00",
+    "end_time": "14:00"
+   },
+   {
+    "id": "w8_1",
+    "doctor_id": "d8",
+    "day": "Thu",
+    "start_time": "10:00",
+    "end_time": "14:00"
+   },
+   {
+    "id": "w8_2",
+    "doctor_id": "d8",
+    "day": "Sat",
+    "start_time": "10:00",
+    "end_time": "14:00"
+   },
+   {
+    "id": "w9_0",
+    "doctor_id": "d9",
+    "day": "Mon",
+    "start_time": "14:00",
+    "end_time": "18:00"
+   },
+   {
+    "id": "w9_1",
+    "doctor_id": "d9",
+    "day": "Wed",
+    "start_time": "14:00",
+    "end_time": "18:00"
+   },
+   {
+    "id": "w9_2",
+    "doctor_id": "d9",
+    "day": "Fri",
+    "start_time": "14:00",
+    "end_time": "18:00"
+   },
+   {
+    "id": "w10_0",
+    "doctor_id": "d10",
+    "day": "Mon",
+    "start_time": "12:00",
+    "end_time": "16:00"
+   },
+   {
+    "id": "w10_1",
+    "doctor_id": "d10",
+    "day": "Thu",
+    "start_time": "12:00",
+    "end_time": "16:00"
+   },
+   {
+    "id": "w10_2",
+    "doctor_id": "d10",
+    "day": "Fri",
+    "start_time": "12:00",
+    "end_time": "16:00"
+   },
+   {
+    "id": "w11_0",
+    "doctor_id": "d11",
+    "day": "Mon",
+    "start_time": "16:00",
+    "end_time": "19:00"
+   },
+   {
+    "id": "w11_1",
+    "doctor_id": "d11",
+    "day": "Tue",
+    "start_time": "16:00",
+    "end_time": "19:00"
+   },
+   {
+    "id": "w11_2",
+    "doctor_id": "d11",
+    "day": "Wed",
+    "start_time": "16:00",
+    "end_time": "19:00"
+   },
+   {
+    "id": "w11_3",
+    "doctor_id": "d11",
+    "day": "Thu",
+    "start_time": "16:00",
+    "end_time": "19:00"
+   },
+   {
+    "id": "w11_4",
+    "doctor_id": "d11",
+    "day": "Fri",
+    "start_time": "16:00",
+    "end_time": "19:00"
+   },
+   {
+    "id": "w12_0",
+    "doctor_id": "d12",
+    "day": "Tue",
+    "start_time": "09:00",
+    "end_time": "13:00"
+   },
+   {
+    "id": "w12_1",
+    "doctor_id": "d12",
+    "day": "Wed",
+    "start_time": "09:00",
+    "end_time": "13:00"
+   },
+   {
+    "id": "w12_2",
+    "doctor_id": "d12",
+    "day": "Thu",
+    "start_time": "09:00",
+    "end_time": "13:00"
+   },
+   {
+    "id": "w12_3",
+    "doctor_id": "d12",
+    "day": "Fri",
+    "start_time": "09:00",
+    "end_time": "13:00"
+   }
+  ],
+  "reviews": [
+   {
+    "id": "r1a",
+    "doctor_id": "d1",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r1b",
+    "doctor_id": "d1",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r2a",
+    "doctor_id": "d2",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r2b",
+    "doctor_id": "d2",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r3a",
+    "doctor_id": "d3",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r3b",
+    "doctor_id": "d3",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r4a",
+    "doctor_id": "d4",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r4b",
+    "doctor_id": "d4",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r5a",
+    "doctor_id": "d5",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r5b",
+    "doctor_id": "d5",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r6a",
+    "doctor_id": "d6",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r6b",
+    "doctor_id": "d6",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r7a",
+    "doctor_id": "d7",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r7b",
+    "doctor_id": "d7",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r8a",
+    "doctor_id": "d8",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r8b",
+    "doctor_id": "d8",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r9a",
+    "doctor_id": "d9",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r9b",
+    "doctor_id": "d9",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r10a",
+    "doctor_id": "d10",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r10b",
+    "doctor_id": "d10",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r11a",
+    "doctor_id": "d11",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r11b",
+    "doctor_id": "d11",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   },
+   {
+    "id": "r12a",
+    "doctor_id": "d12",
+    "author": "Ayesha K.",
+    "rating": 5,
+    "text": "Very attentive and explained everything clearly. Short waiting time.",
+    "date": "2026-09-12"
+   },
+   {
+    "id": "r12b",
+    "doctor_id": "d12",
+    "author": "Bilal R.",
+    "rating": 4,
+    "text": "Professional and kind. The follow-up advice was practical.",
+    "date": "2026-08-03"
+   }
+  ],
+  "appointments": [
+   {
+    "id": "a1",
+    "ref": "MDV-1001",
+    "patient_id": "p3",
+    "doctor_id": "d7",
+    "date": "2026-10-19",
+    "time": "09:00",
+    "reason": "Joint pain",
+    "status": "completed",
+    "created_at": "2026-10-17T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a2",
+    "ref": "MDV-1002",
+    "patient_id": "p5",
+    "doctor_id": "d11",
+    "date": "2026-10-20",
+    "time": "17:00",
+    "reason": "Persistent headache",
+    "status": "cancelled",
+    "created_at": "2026-10-18T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a3",
+    "ref": "MDV-1003",
+    "patient_id": "p3",
+    "doctor_id": "d1",
+    "date": "2026-10-21",
+    "time": "09:30",
+    "reason": "Child vaccination",
+    "status": "completed",
+    "created_at": "2026-10-19T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a4",
+    "ref": "MDV-1004",
+    "patient_id": "p2",
+    "doctor_id": "d7",
+    "date": "2026-10-21",
+    "time": "09:30",
+    "reason": "Routine checkup",
+    "status": "rejected",
+    "created_at": "2026-10-19T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a5",
+    "ref": "MDV-1005",
+    "patient_id": "p2",
+    "doctor_id": "d6",
+    "date": "2026-10-22",
+    "time": "16:30",
+    "reason": "Joint pain",
+    "status": "completed",
+    "created_at": "2026-10-20T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a6",
+    "ref": "MDV-1006",
+    "patient_id": "p10",
+    "doctor_id": "d4",
+    "date": "2026-10-23",
+    "time": "11:00",
+    "reason": "Joint pain",
+    "status": "completed",
+    "created_at": "2026-10-21T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a7",
+    "ref": "MDV-1007",
+    "patient_id": "p2",
+    "doctor_id": "d7",
+    "date": "2026-10-23",
+    "time": "09:30",
+    "reason": "Dental cleaning",
+    "status": "completed",
+    "created_at": "2026-10-21T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a8",
+    "ref": "MDV-1008",
+    "patient_id": "p7",
+    "doctor_id": "d5",
+    "date": "2026-10-27",
+    "time": "11:00",
+    "reason": "Follow-up consultation",
+    "status": "completed",
+    "created_at": "2026-10-25T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a9",
+    "ref": "MDV-1009",
+    "patient_id": "p1",
+    "doctor_id": "d6",
+    "date": "2026-10-27",
+    "time": "15:00",
+    "reason": "Joint pain",
+    "status": "completed",
+    "created_at": "2026-10-25T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a10",
+    "ref": "MDV-1010",
+    "patient_id": "p5",
+    "doctor_id": "d12",
+    "date": "2026-10-28",
+    "time": "09:30",
+    "reason": "Joint pain",
+    "status": "completed",
+    "created_at": "2026-10-26T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a11",
+    "ref": "MDV-1011",
+    "patient_id": "p5",
+    "doctor_id": "d11",
+    "date": "2026-10-28",
+    "time": "16:30",
+    "reason": "Persistent headache",
+    "status": "completed",
+    "created_at": "2026-10-26T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a12",
+    "ref": "MDV-1012",
+    "patient_id": "p9",
+    "doctor_id": "d4",
+    "date": "2026-10-29",
+    "time": "12:30",
+    "reason": "Second opinion on reports",
+    "status": "rejected",
+    "created_at": "2026-10-27T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a13",
+    "ref": "MDV-1013",
+    "patient_id": "p6",
+    "doctor_id": "d9",
+    "date": "2026-10-30",
+    "time": "15:00",
+    "reason": "Routine checkup",
+    "status": "completed",
+    "created_at": "2026-10-28T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a14",
+    "ref": "MDV-1014",
+    "patient_id": "p8",
+    "doctor_id": "d5",
+    "date": "2026-10-31",
+    "time": "10:30",
+    "reason": "Persistent headache",
+    "status": "rejected",
+    "created_at": "2026-10-29T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a15",
+    "ref": "MDV-1015",
+    "patient_id": "p10",
+    "doctor_id": "d6",
+    "date": "2026-11-02",
+    "time": "15:00",
+    "reason": "Joint pain",
+    "status": "cancelled",
+    "created_at": "2026-10-31T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a16",
+    "ref": "MDV-1016",
+    "patient_id": "p1",
+    "doctor_id": "d11",
+    "date": "2026-11-04",
+    "time": "16:30",
+    "reason": "Follow-up consultation",
+    "status": "completed",
+    "created_at": "2026-11-02T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a17",
+    "ref": "MDV-1017",
+    "patient_id": "p9",
+    "doctor_id": "d9",
+    "date": "2026-11-04",
+    "time": "15:00",
+    "reason": "Persistent headache",
+    "status": "cancelled",
+    "created_at": "2026-11-02T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a18",
+    "ref": "MDV-1018",
+    "patient_id": "p1",
+    "doctor_id": "d1",
+    "date": "2026-11-05",
+    "time": "09:00",
+    "reason": "Blood pressure monitoring",
+    "status": "cancelled",
+    "created_at": "2026-11-03T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a19",
+    "ref": "MDV-1019",
+    "patient_id": "p1",
+    "doctor_id": "d2",
+    "date": "2026-11-06",
+    "time": "10:30",
+    "reason": "Persistent headache",
+    "status": "completed",
+    "created_at": "2026-11-04T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a20",
+    "ref": "MDV-1020",
+    "patient_id": "p3",
+    "doctor_id": "d1",
+    "date": "2026-11-06",
+    "time": "09:30",
+    "reason": "Persistent headache",
+    "status": "cancelled",
+    "created_at": "2026-11-04T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a21",
+    "ref": "MDV-1021",
+    "patient_id": "p7",
+    "doctor_id": "d2",
+    "date": "2026-11-07",
+    "time": "10:00",
+    "reason": "Routine checkup",
+    "status": "completed",
+    "created_at": "2026-11-05T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a22",
+    "ref": "MDV-1022",
+    "patient_id": "p5",
+    "doctor_id": "d1",
+    "date": "2026-11-09",
+    "time": "10:30",
+    "reason": "Dental cleaning",
+    "status": "completed",
+    "created_at": "2026-11-07T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a23",
+    "ref": "MDV-1023",
+    "patient_id": "p4",
+    "doctor_id": "d8",
+    "date": "2026-11-10",
+    "time": "10:30",
+    "reason": "Routine checkup",
+    "status": "rejected",
+    "created_at": "2026-11-08T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a24",
+    "ref": "MDV-1024",
+    "patient_id": "p4",
+    "doctor_id": "d1",
+    "date": "2026-11-11",
+    "time": "09:00",
+    "reason": "Routine checkup",
+    "status": "completed",
+    "created_at": "2026-11-09T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a25",
+    "ref": "MDV-1025",
+    "patient_id": "p10",
+    "doctor_id": "d5",
+    "date": "2026-11-12",
+    "time": "10:30",
+    "reason": "Blood pressure monitoring",
+    "status": "completed",
+    "created_at": "2026-11-10T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a26",
+    "ref": "MDV-1026",
+    "patient_id": "p5",
+    "doctor_id": "d11",
+    "date": "2026-11-13",
+    "time": "17:00",
+    "reason": "Second opinion on reports",
+    "status": "completed",
+    "created_at": "2026-11-11T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a27",
+    "ref": "MDV-1027",
+    "patient_id": "p1",
+    "doctor_id": "d9",
+    "date": "2026-11-16",
+    "time": "15:30",
+    "reason": "Second opinion on reports",
+    "status": "pending",
+    "created_at": "2026-11-14T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a28",
+    "ref": "MDV-1028",
+    "patient_id": "p10",
+    "doctor_id": "d6",
+    "date": "2026-11-17",
+    "time": "15:00",
+    "reason": "Blood pressure monitoring",
+    "status": "pending",
+    "created_at": "2026-11-15T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a29",
+    "ref": "MDV-1029",
+    "patient_id": "p8",
+    "doctor_id": "d5",
+    "date": "2026-11-17",
+    "time": "11:00",
+    "reason": "Blood pressure monitoring",
+    "status": "approved",
+    "created_at": "2026-11-15T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a30",
+    "ref": "MDV-1030",
+    "patient_id": "p4",
+    "doctor_id": "d9",
+    "date": "2026-11-18",
+    "time": "14:00",
+    "reason": "Joint pain",
+    "status": "cancelled",
+    "created_at": "2026-11-16T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a31",
+    "ref": "MDV-1031",
+    "patient_id": "p4",
+    "doctor_id": "d3",
+    "date": "2026-11-24",
+    "time": "15:00",
+    "reason": "Second opinion on reports",
+    "status": "pending",
+    "created_at": "2026-11-22T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a32",
+    "ref": "MDV-1032",
+    "patient_id": "p2",
+    "doctor_id": "d5",
+    "date": "2026-11-24",
+    "time": "11:00",
+    "reason": "Skin allergy review",
+    "status": "approved",
+    "created_at": "2026-11-22T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a33",
+    "ref": "MDV-1033",
+    "patient_id": "p1",
+    "doctor_id": "d7",
+    "date": "2026-11-25",
+    "time": "09:00",
+    "reason": "Follow-up consultation",
+    "status": "pending",
+    "created_at": "2026-11-23T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "a34",
+    "ref": "MDV-1034",
+    "patient_id": "p6",
+    "doctor_id": "d4",
+    "date": "2026-11-25",
+    "time": "11:30",
+    "reason": "Skin allergy review",
+    "status": "approved",
+    "created_at": "2026-11-23T10:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "ax0",
+    "ref": "MDV-2000",
+    "patient_id": "p1",
+    "doctor_id": "d1",
+    "date": "2026-11-06",
+    "time": "09:00",
+    "reason": "Routine checkup",
+    "status": "completed",
+    "created_at": "2026-11-03T08:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "ax1",
+    "ref": "MDV-2001",
+    "patient_id": "p1",
+    "doctor_id": "d1",
+    "date": "2026-11-13",
+    "time": "09:30",
+    "reason": "Follow-up consultation",
+    "status": "cancelled",
+    "created_at": "2026-11-10T08:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "ax2",
+    "ref": "MDV-2002",
+    "patient_id": "p1",
+    "doctor_id": "d1",
+    "date": "2026-11-18",
+    "time": "10:00",
+    "reason": "Persistent headache",
+    "status": "approved",
+    "created_at": "2026-11-15T08:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "ax3",
+    "ref": "MDV-2003",
+    "patient_id": "p1",
+    "doctor_id": "d1",
+    "date": "2026-11-20",
+    "time": "11:00",
+    "reason": "Skin allergy review",
+    "status": "pending",
+    "created_at": "2026-11-17T08:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "ax4",
+    "ref": "MDV-2004",
+    "patient_id": "p3",
+    "doctor_id": "d1",
+    "date": "2026-11-23",
+    "time": "09:30",
+    "reason": "Joint pain",
+    "status": "pending",
+    "created_at": "2026-11-20T08:00:00.000Z",
+    "notes": null
+   },
+   {
+    "id": "ax5",
+    "ref": "MDV-2005",
+    "patient_id": "p4",
+    "doctor_id": "d1",
+    "date": "2026-11-17",
+    "time": "12:00",
+    "reason": "Blood pressure monitoring",
+    "status": "pending",
+    "created_at": "2026-11-14T08:00:00.000Z",
+    "notes": null
+   }
+  ],
+  "notifications": [
+   {
+    "id": "n1",
+    "role": "patient",
+    "user_ref": "p1",
+    "title": "Welcome to MEDIVANCE",
+    "body": "Your demo account is ready. Book your first appointment.",
+    "time": "2026-11-15T19:14:49.632Z",
+    "read": false
+   },
+   {
+    "id": "n2",
+    "role": "doctor",
+    "user_ref": "d1",
+    "title": "New appointment requests",
+    "body": "You have pending requests waiting for review.",
+    "time": "2026-11-15T19:14:49.632Z",
+    "read": false
+   },
+   {
+    "id": "n3",
+    "role": "admin",
+    "user_ref": null,
+    "title": "System ready",
+    "body": "Frontend simulation data loaded successfully.",
+    "time": "2026-11-15T19:14:49.632Z",
+    "read": false
+   }
+  ],
+  "settings": [
+   {
+    "id": "main",
+    "site_name": "MEDIVANCE",
+    "support_email": "info@medivance.pk",
+    "support_phone": "+92 300 123 4567",
+    "slot_minutes": 30,
+    "allow_registration": true,
+    "email_notifications": true,
+    "sms_notifications": false,
+    "appointment_reminders": true,
+    "admin_name": "System Administrator",
+    "admin_email": "admin@medivance.pk",
+    "admin_phone": "+92 300 123 4567"
+   }
+  ]
+ },
+ "users": [
+  {
+   "email": "admin@medivance.pk",
+   "password": "Admin@123",
+   "role": "admin",
+   "name": "System Administrator"
+  },
+  {
+   "email": "doctor@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Ayesha Khan"
+  },
+  {
+   "email": "doctor2@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Hassan Raza"
+  },
+  {
+   "email": "doctor3@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Sara Ahmed"
+  },
+  {
+   "email": "doctor4@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Kamran Siddiqui"
+  },
+  {
+   "email": "doctor5@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Maria Fatima"
+  },
+  {
+   "email": "doctor6@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Zeeshan Ali"
+  },
+  {
+   "email": "doctor7@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Nadir Hussain"
+  },
+  {
+   "email": "doctor8@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Rabia Shah"
+  },
+  {
+   "email": "doctor9@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Faisal Mehmood"
+  },
+  {
+   "email": "doctor10@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Sana Iqbal"
+  },
+  {
+   "email": "doctor11@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Owais Rehman"
+  },
+  {
+   "email": "doctor12@medivance.pk",
+   "password": "Doctor@123",
+   "role": "doctor",
+   "name": "Dr. Adnan Javed"
+  },
+  {
+   "email": "patient@medivance.pk",
+   "password": "Patient@123",
+   "role": "patient",
+   "name": "Esha Kewalramani"
+  },
+  {
+   "email": "patient2@mail.com",
+   "password": "Patient@123",
+   "role": "patient",
+   "name": "Ali Raza"
+  },
+  {
+   "email": "patient3@mail.com",
+   "password": "Patient@123",
+   "role": "patient",
+   "name": "Fatima Noor"
+  },
+  {
+   "email": "patient4@mail.com",
+   "password": "Patient@123",
+   "role": "patient",
+   "name": "Hamza Sheikh"
+  },
+  {
+   "email": "patient5@mail.com",
+   "password": "Patient@123",
+   "role": "patient",
+   "name": "Zainab Malik"
+  },
+  {
+   "email": "patient6@mail.com",
+   "password": "Patient@123",
+   "role": "patient",
+   "name": "Usman Tariq"
+  },
+  {
+   "email": "patient7@mail.com",
+   "password": "Patient@123",
+   "role": "patient",
+   "name": "Mehwish Arain"
+  },
+  {
+   "email": "patient8@mail.com",
+   "password": "Patient@123",
+   "role": "patient",
+   "name": "Danish Lakhani"
+  },
+  {
+   "email": "patient9@mail.com",
+   "password": "Patient@123",
+   "role": "patient",
+   "name": "Sobia Memon"
+  },
+  {
+   "email": "patient10@mail.com",
+   "password": "Patient@123",
+   "role": "patient",
+   "name": "Rizwan Bhatti"
+  }
+ ]
+}
