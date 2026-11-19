@@ -10,6 +10,18 @@ import { useApp } from "@/hooks/useApp";
 import { useQueryParam } from "@/hooks/useQueryParam";
 import { weekdayOf, todayISO } from "@/lib/utilities";
 
+const SYMPTOM_KEYWORDS: Record<string, string[]> = {
+  cardiology: ["heart", "cardio", "chest", "chest pain", "bp", "blood pressure", "hypertension", "palpitation", "cholesterol", "attack", "ecg", "cardiac"],
+  neurology: ["brain", "headache", "migraine", "nerve", "stroke", "neuro", "seizure", "paralysis", "vertigo", "memory", "spine", "numbness", "tremor"],
+  ophthalmology: ["eye", "vision", "sight", "glasses", "lens", "cataract", "retina", "ophthalmic", "blur", "cornea", "dry eye", "laser", "specs"],
+  dermatology: ["skin", "acne", "rash", "hair", "nail", "allergy", "eczema", "derma", "pigmentation", "mole", "itch"],
+  orthopedics: ["bone", "joint", "knee", "spine", "back pain", "fracture", "ortho", "arthritis", "shoulder", "muscle", "ligament", "hip"],
+  pediatrics: ["child", "baby", "kid", "infant", "pediatric", "vaccine", "growth", "toddler", "newborn"],
+  "general medicine": ["fever", "cough", "flu", "cold", "infection", "stomach", "weakness", "general", "physician", "routine", "diabetes"],
+  gynecology: ["women", "pregnancy", "period", "maternity", "fertility", "gynae", "female", "menstrual", "pcos"],
+  dentistry: ["tooth", "teeth", "dental", "gum", "cavity", "oral", "dentist", "braces", "root canal"],
+};
+
 export default function DoctorsExplorer({ profileBase = "/doctors" }: { profileBase?: string }) {
   const { data } = useApp();
   const qpSpec = useQueryParam("spec");
@@ -27,14 +39,36 @@ export default function DoctorsExplorer({ profileBase = "/doctors" }: { profileB
 
   const list = useMemo(() => {
     const today = weekdayOf(todayISO());
-    const r = data.doctors.filter((d) =>
-      (!q || `${d.name} ${d.specialization} ${d.qualification}`.toLowerCase().includes(q.toLowerCase())) &&
-      (spec === "all" || d.specialization === spec) &&
-      d.experience >= Number(exp) &&
-      (!top || d.rating >= 4.5) &&
-      (!savedOnly || favIds.includes(d.id)) &&
-      (avail === "any" || (avail === "today" && d.availability.some((w) => w.day === today)) || (avail === "weekend" && d.availability.some((w) => w.day === "Sat" || w.day === "Sun")) || (avail === "none" && d.availability.length > 0)),
-    );
+    const query = q.trim().toLowerCase();
+
+    const r = data.doctors.filter((d) => {
+      const matchSpec = spec === "all" || d.specialization === spec;
+      if (!matchSpec) return false;
+
+      let matchQ = true;
+      if (query) {
+        const direct = `${d.name} ${d.specialization} ${d.qualification} ${d.bio || ""}`.toLowerCase().includes(query);
+        let keyword = false;
+        const sLower = d.specialization.toLowerCase();
+        for (const [k, words] of Object.entries(SYMPTOM_KEYWORDS)) {
+          if (sLower.includes(k) || k.includes(sLower)) {
+            if (words.some((w) => w.includes(query) || query.includes(w))) {
+              keyword = true;
+              break;
+            }
+          }
+        }
+        matchQ = direct || keyword;
+      }
+
+      return (
+        matchQ &&
+        d.experience >= Number(exp) &&
+        (!top || d.rating >= 4.5) &&
+        (!savedOnly || favIds.includes(d.id)) &&
+        (avail === "any" || (avail === "today" && d.availability.some((w) => w.day === today)) || (avail === "weekend" && d.availability.some((w) => w.day === "Sat" || w.day === "Sun")) || (avail === "none" && d.availability.length > 0))
+      );
+    });
     const s = [...r];
     if (sort === "rating") s.sort((a, b) => b.rating - a.rating);
     if (sort === "experience") s.sort((a, b) => b.experience - a.experience);

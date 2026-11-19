@@ -1,7 +1,7 @@
 import { Appointment, AppointmentStatus, DataState, Doctor, MedicalRecord, Patient, Prescription, Specialization, Weekday } from "@/types";
 import { addDays, todayISO } from "@/lib/utilities";
 
-export const SPECIALIZATION_ICONS = ["HeartPulse", "Sparkles", "Brain", "Baby", "Bone", "Smile", "Stethoscope", "Flower2"] as const;
+export const SPECIALIZATION_ICONS = ["HeartPulse", "Sparkles", "Brain", "Baby", "Bone", "Smile", "Stethoscope", "Flower2", "Eye"] as const;
 
 export const SPECIALIZATIONS: Specialization[] = [
   { id: "sp1", name: "Cardiology", icon: "HeartPulse", description: "Heart health, blood pressure and cardiac care." },
@@ -12,6 +12,7 @@ export const SPECIALIZATIONS: Specialization[] = [
   { id: "sp6", name: "Dentistry", icon: "Smile", description: "Dental checkups, braces, implants and oral care." },
   { id: "sp7", name: "General Medicine", icon: "Stethoscope", description: "Primary care for everyday health concerns." },
   { id: "sp8", name: "Gynecology", icon: "Flower2", description: "Women's health, pregnancy and reproductive care." },
+  { id: "sp9", name: "Ophthalmology", icon: "Eye", description: "Eye exams, vision testing, cataracts and comprehensive eye care." },
 ];
 
 const win = (id: string, days: Weekday[], start: string, end: string) =>
@@ -44,6 +45,9 @@ export const DOCTORS: Doctor[] = [
   D(10, "Dr. Sana Iqbal", "Dermatology", "MBBS, FCPS (Dermatology)", 6, 4.6, 2300, ["English", "Urdu"], "Medical dermatology, laser treatments and allergy-related skin problems.", win("w10", ["Mon", "Thu", "Fri"], "12:00", "16:00")),
   D(11, "Dr. Owais Rehman", "Pediatrics", "MBBS, DCH", 5, 4.4, 1700, ["English", "Urdu", "Pashto"], "Newborn care, nutrition guidance and paediatric allergies.", win("w11", wk, "16:00", "19:00")),
   D(12, "Dr. Adnan Javed", "General Medicine", "MBBS, FCPS (Medicine)", 15, 4.8, 2000, ["English", "Urdu"], "Internal medicine with a focus on chronic disease management and preventive screening.", win("w12", ["Tue", "Wed", "Thu", "Fri"], "09:00", "13:00")),
+  D(13, "Dr. Zainab Tariq", "Neurology", "MBBS, FCPS (Neurology)", 14, 4.9, 3500, ["English", "Urdu"], "Senior consultant neurologist specializing in migraines, epilepsy, neuropathy, and stroke recovery. Dedicated to thorough clinical neurological examinations.", win("w13", ["Mon", "Tue", "Thu", "Fri"], "10:00", "14:00")),
+  D(14, "Dr. Bilal Siddiqui", "Neurology", "MBBS, MD (Neurology)", 11, 4.8, 3200, ["English", "Urdu", "Sindhi"], "Consultant neurologist with deep expertise in neurodegenerative conditions, Parkinson's disease, sleep disorders, and chronic nerve pain.", win("w14", ["Mon", "Wed", "Sat"], "14:00", "18:00")),
+  D(15, "Dr. Hina Aslam", "Ophthalmology", "MBBS, FCPS (Ophthalmology)", 12, 4.9, 3000, ["English", "Urdu"], "Consultant ophthalmologist and eye surgeon specializing in comprehensive eye examinations, glaucoma screening, cataracts, and refractive care.", win("w15", ["Tue", "Wed", "Thu", "Sat"], "09:00", "13:00")),
 ];
 
 const P = (n: number, name: string, g: Patient["gender"], dob: string, city: string, back: number): Patient => ({

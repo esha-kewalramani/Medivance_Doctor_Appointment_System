@@ -48,7 +48,13 @@ export async function loadAll(sb: SupabaseClient, role: Role | undefined, defaul
     sb.from("busy_slots").select("*"), q("payments"), q("appointment_reschedules"),
   ]);
   const failed = [spec, doc, av, rev, set].find((r) => r.error);
-  if (failed?.error) throw new Error(failed.error.message);
+  if (failed?.error || !doc.data?.length) {
+    const seed = createSeed();
+    return {
+      ...seed,
+      settings: { ...defaults, adminPassword: "" },
+    };
+  }
 
   const availability = (av.data ?? []) as Row[];
   const reviews = (rev.data ?? []) as Row[];

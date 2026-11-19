@@ -38,7 +38,7 @@ export default function PublicNavbar() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           {session ? <button onClick={logout} className="nav-login hidden sm:inline-flex">Logout</button> : <Link href="/login" className="nav-login hidden sm:inline-flex">Login</Link>}
-          <Link href="/patient/book" className="nav-cta hidden sm:inline-flex">Book now <ArrowUpRight className="h-4 w-4" /></Link>
+          <Link href={session?.role === "patient" ? "/patient/book" : "/book"} className="nav-cta hidden sm:inline-flex">Book now <ArrowUpRight className="h-4 w-4" /></Link>
           <button className="btn-ghost btn-sm lg:hidden" onClick={() => setOpen(!open)} aria-label="Menu" aria-expanded={open}>{open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
         </div>
       </div>
@@ -49,7 +49,7 @@ export default function PublicNavbar() {
           ))}
           <div className="mt-2 grid grid-cols-2 gap-2 border-t border-line/40 pt-3">
             {session ? <button onClick={() => { logout(); setOpen(false); }} className="nav-login">Logout</button> : <Link href="/login" onClick={() => setOpen(false)} className="nav-login">Login</Link>}
-            <Link href="/patient/book" onClick={() => setOpen(false)} className="nav-cta">Book now <ArrowUpRight className="h-4 w-4" /></Link>
+            <Link href={session?.role === "patient" ? "/patient/book" : "/book"} onClick={() => setOpen(false)} className="nav-cta">Book now <ArrowUpRight className="h-4 w-4" /></Link>
           </div>
         </div>
       )}

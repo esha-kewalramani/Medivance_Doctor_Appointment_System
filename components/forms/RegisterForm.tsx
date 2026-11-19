@@ -1,18 +1,34 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import { useApp } from "@/hooks/useApp";
+import { useQueryParam } from "@/hooks/useQueryParam";
 import { validatePatient, Errors } from "@/lib/validation";
 import { toast } from "@/components/notifications/alerts";
 
 export default function RegisterForm() {
   const router = useRouter();
   const { registerPatient, login } = useApp();
+  const qName = useQueryParam("name");
+  const qEmail = useQueryParam("email");
+  const qPhone = useQueryParam("phone");
+
   const [f, setF] = useState({ name: "", email: "", phone: "", dob: "", gender: "", password: "", confirm: "" });
   const [e, setE] = useState<Errors>({});
   const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (qName || qEmail || qPhone) {
+      setF((prev) => ({
+        ...prev,
+        name: qName || prev.name,
+        email: qEmail || prev.email,
+        phone: qPhone || prev.phone,
+      }));
+    }
+  }, [qName, qEmail, qPhone]);
   const set = (k: keyof typeof f) => (ev: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: ev.target.value });
 
   const submit = async (ev: React.FormEvent) => {

@@ -81,6 +81,26 @@ html.theme-anim *, html.theme-anim *::before, html.theme-anim *::after {
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-thumb { background: rgb(var(--primary) / 0.35); border-radius: 9px; }
 
+/* Dedicated high-visibility horizontal scrollbar for doctor selection carousel */
+.custom-horizontal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--primary) / 0.6) rgb(var(--line) / 0.3);
+}
+.custom-horizontal-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+.custom-horizontal-scrollbar::-webkit-scrollbar-track {
+  background: rgb(var(--line) / 0.25);
+  border-radius: 9999px;
+}
+.custom-horizontal-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(var(--primary) / 0.55);
+  border-radius: 9999px;
+}
+.custom-horizontal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--primary) / 0.85);
+}
+
 @layer components {
   .card {
     background: var(--card-bg);
@@ -291,6 +311,9 @@ table select.input { max-width: 100%; min-width: 0; }
 .on-dark .mdv-word { color: #fff; }
 .on-dark .mdv-word .text-primary { color: #7dd3fc; }
 .on-dark .mdv-tag { color: rgb(255 255 255 / .78); }
+
+/* Hide splash screen instantly on page refresh if already completed */
+html.splash-done #mdv-splash-screen { display: none !important; }
 
 /* ---------- First splash (vector logo reveal, ~3s) ---------- */
 .sp1 { --u: min(1100px, 92vw); position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 52%, #0b3aa8 0%, #0a2a7a 38%, #061a52 70%, #040f33 100%); }

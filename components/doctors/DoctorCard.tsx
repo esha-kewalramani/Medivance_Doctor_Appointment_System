@@ -35,7 +35,7 @@ export default function DoctorCard({ doctor: d, profileBase = "/doctors" }: { do
         </ul>
         <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
           <Link href={`${profileBase}/${d.id}`} className="btn-primary !rounded-full">View Profile <ChevronRight className="h-4 w-4" /></Link>
-          <Link href={`/patient/book?doctor=${d.id}`} className="btn-ghost !rounded-full !px-3" aria-label={`Book ${d.name}`}><CalendarPlus className="h-4 w-4" /></Link>
+          <Link href={`${profileBase.startsWith("/patient") ? "/patient/book" : "/book"}?doctor=${d.id}`} className="btn-ghost !rounded-full !px-3" aria-label={`Book ${d.name}`}><CalendarPlus className="h-4 w-4" /></Link>
         </div>
       </div>
     </article>

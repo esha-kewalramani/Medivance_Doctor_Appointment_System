@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Tooltip, XAxis, YAxis, Legend } from "recharts";
-import { Bot, CalendarCheck, CalendarClock, CalendarX2, CheckCircle2, Mail, Phone, Droplets } from "lucide-react";
+import { Bot, CalendarCheck, CalendarClock, CalendarX2, CheckCircle2, Mail, Phone, Droplets, Pill, FileText, ShieldCheck, ShieldAlert, Sparkles } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import HealthSummary from "@/components/dashboard/HealthSummary";
 import Countdown from "@/components/appointments/Countdown";
@@ -15,10 +15,13 @@ import { useApp } from "@/hooks/useApp";
 import { addDays, fmtDate, fmtTime, parseISO, timeAgo, todayISO } from "@/lib/utilities";
 
 export default function PatientDashboard() {
-  const { data, session, user, doctorById } = useApp();
+  const { data, session, user, doctorById, toggleAuraConsent } = useApp();
   const c = useChartColors();
   const me = data.patients.find((p) => p.id === session?.userId);
   const mine = useMemo(() => data.appointments.filter((a) => a.patientId === session?.userId), [data.appointments, session]);
+  const myPrescriptions = useMemo(() => (data.prescriptions || []).filter((p) => p.patientId === session?.userId), [data.prescriptions, session]);
+  const myRecords = useMemo(() => (data.medicalRecords || []).filter((m) => m.patientId === session?.userId), [data.medicalRecords, session]);
+
   const today = todayISO();
   const upcoming = mine.filter((a) => ["pending", "approved"].includes(a.status) && a.date >= today).sort((a, b) => (a.date + a.time > b.date + b.time ? 1 : -1));
   const completed = mine.filter((a) => a.status === "completed").length;
@@ -30,6 +33,8 @@ export default function PatientDashboard() {
     return { name: label, visits: mine.filter((a) => a.date > start && a.date <= end).length };
   });
   const recent = [...mine].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)).slice(0, 5);
+
+  const auraConsented = Boolean(me?.auraConsent);
 
   return (
     <div className="space-y-6">
@@ -49,6 +54,42 @@ export default function PatientDashboard() {
         </div>
       </section>
 
+      {/* Aura AI Consent & Privacy Card */}
+      <section className="card border-primary/20 bg-surface-2/40 p-4 sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-display font-semibold text-base">Aura AI Personalized Health Assistant</h3>
+                {auraConsented ? (
+                  <span className="badge border-ok/30 bg-ok/10 text-ok text-xs inline-flex items-center gap-1">
+                    <ShieldCheck className="h-3 w-3" /> Consent Active
+                  </span>
+                ) : (
+                  <span className="badge border-muted/30 bg-muted/10 text-muted text-xs inline-flex items-center gap-1">
+                    <ShieldAlert className="h-3 w-3" /> Consent Inactive
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 text-xs text-muted leading-relaxed max-w-2xl">
+                Strict privacy control: Aura AI can securely access your previous consultation records and prescriptions only when you grant explicit consent.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0">
+            <button
+              onClick={() => session && toggleAuraConsent(session.userId, !auraConsented)}
+              className={`btn btn-sm ${auraConsented ? "btn-danger" : "btn-primary"} !rounded-lg text-xs`}
+            >
+              {auraConsented ? "Revoke Access" : "Enable Aura AI Access"}
+            </button>
+          </div>
+        </div>
+      </section>
+
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <StatCard label="Total appointments" value={mine.length} icon={CalendarCheck} />
         <StatCard label="Upcoming" value={upcoming.length} icon={CalendarClock} tone="warn" />
@@ -57,6 +98,74 @@ export default function PatientDashboard() {
       </div>
 
       <HealthSummary />
+
+      {/* Prescriptions & Medical Records Section */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Prescriptions */}
+        <section className="card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+              <Pill className="h-4 w-4 text-primary" /> My Prescriptions ({myPrescriptions.length})
+            </h2>
+            <Link href="/patient/assistant" className="text-xs text-primary hover:underline">Ask Aura about meds</Link>
+          </div>
+          {myPrescriptions.length === 0 ? (
+            <p className="text-sm text-muted py-4 text-center">No prescriptions on record yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {myPrescriptions.map((p) => (
+                <div key={p.id} className="rounded-xl border border-line/50 p-3.5 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-fg">{p.doctorName}</span>
+                    <span className="text-muted">{fmtDate(p.date)}</span>
+                  </div>
+                  <ul className="space-y-1 text-xs">
+                    {p.medications.map((m, idx) => (
+                      <li key={idx} className="flex items-center justify-between border-b border-line/30 py-1 last:border-0">
+                        <span className="font-medium text-primary">{m.name} <span className="text-fg font-normal">({m.dosage})</span></span>
+                        <span className="text-muted">{m.frequency} • {m.duration}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {p.instructions && <p className="text-xs text-muted pt-1"><b className="text-fg">Advice:</b> {p.instructions}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Clinical Records */}
+        <section className="card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" /> Consultation Records ({myRecords.length})
+            </h2>
+            <Link href="/patient/assistant" className="text-xs text-primary hover:underline">Explain reports</Link>
+          </div>
+          {myRecords.length === 0 ? (
+            <p className="text-sm text-muted py-4 text-center">No consultation records on file yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {myRecords.map((r) => (
+                <div key={r.id} className="rounded-xl border border-line/50 p-3.5 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-fg">{r.diagnosis}</span>
+                    <span className="text-muted">{fmtDate(r.date)} • {r.doctorName}</span>
+                  </div>
+                  <p className="text-xs text-muted leading-relaxed line-clamp-2">{r.clinicalNotes}</p>
+                  {r.vitals && (
+                    <div className="flex flex-wrap gap-2 pt-1 text-[11px]">
+                      {r.vitals.bloodPressure && <span className="badge border-line/50">BP: {r.vitals.bloodPressure}</span>}
+                      {r.vitals.heartRate && <span className="badge border-line/50">HR: {r.vitals.heartRate}</span>}
+                      {r.vitals.weight && <span className="badge border-line/50">Weight: {r.vitals.weight}</span>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <ChartCard title="Appointments by status" subtitle="Your bookings" className="lg:col-span-1">

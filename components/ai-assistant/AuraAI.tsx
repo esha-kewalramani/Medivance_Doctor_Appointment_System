@@ -18,7 +18,8 @@ const TILES = [
 ];
 
 export default function AuraAI() {
-  const { data } = useApp();
+  const { data, session, patientById } = useApp();
+  const currentPatient = session ? patientById(session.userId) : null;
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [typing, setTyping] = useState(false);
@@ -34,7 +35,12 @@ export default function AuraAI() {
     setMsgs((m) => [...m, { id: Date.now(), from: "me", text: v }]);
     setText(""); setTyping(true);
     setTimeout(() => {
-      const r = auraReply(v, data.doctors, data.specializations, tile);
+      const r = auraReply(v, data.doctors, data.specializations, tile, {
+        session,
+        patient: currentPatient,
+        prescriptions: data.prescriptions,
+        medicalRecords: data.medicalRecords,
+      });
       setMsgs((m) => [...m, { id: Date.now() + 1, from: "bot", text: r.text, links: r.links }]);
       setTyping(false);
       if (voice) { try { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(r.text.replace(/•/g, ""))); } catch { /* unsupported */ } }

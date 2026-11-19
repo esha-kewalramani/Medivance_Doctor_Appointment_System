@@ -11,7 +11,7 @@ import { WEEKDAYS } from "@/types";
 
 export default function DoctorProfileView({ backHref = "/doctors" }: { backHref?: string }) {
   const { id } = useParams<{ id: string }>();
-  const { doctorById, ready } = useApp();
+  const { doctorById, ready, session } = useApp();
   const d = doctorById(id);
   if (!ready) return null;
   if (!d) return <div className="card"><EmptyState title="Doctor not found" text="This profile may have been removed." action={<Link href={backHref} className="btn-primary btn-sm">Back to doctors</Link>} /></div>;
@@ -35,7 +35,7 @@ export default function DoctorProfileView({ backHref = "/doctors" }: { backHref?
             <div><p className="label">Languages</p><p className="inline-flex items-center gap-1 font-semibold"><Globe className="h-4 w-4 text-primary" /> {d.languages.join(", ")}</p></div>
           </div>
         </div>
-        <Link href={`/patient/book?doctor=${d.id}`} className="btn-primary h-fit w-full self-start sm:w-auto sm:self-center"><CalendarPlus className="h-4 w-4" /> Book Appointment</Link>
+        <Link href={`${session?.role === "patient" ? "/patient/book" : "/book"}?doctor=${d.id}`} className="btn-primary h-fit w-full self-start sm:w-auto sm:self-center"><CalendarPlus className="h-4 w-4" /> Book Appointment</Link>
       </section>
       <div className="grid gap-5 lg:grid-cols-3">
         <section className="card p-5 lg:col-span-2">

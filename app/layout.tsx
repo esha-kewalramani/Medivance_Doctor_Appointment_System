@@ -14,12 +14,12 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
-const themeScript = `try{var t=JSON.parse(localStorage.getItem('mdv:theme'));if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`;
+const bootScript = `try{var t=JSON.parse(localStorage.getItem('mdv:theme'));if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;try{localStorage.removeItem('hasSeenIntro');}catch(e){}var isReload=false;try{var nav=performance.getEntriesByType('navigation')[0];if(nav&&nav.type==='reload')isReload=true;}catch(e){}if(isReload||sessionStorage.getItem('hasSeenIntro')==='true'){document.documentElement.classList.add('splash-done');}}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" data-theme="dark" suppressHydrationWarning className={`${inter.variable} ${serif.variable}`}>
-      <head><script dangerouslySetInnerHTML={{ __html: themeScript }} /></head>
+      <head><script dangerouslySetInnerHTML={{ __html: bootScript }} /></head>
       <body>
         <a href="#main-content" className="skip-link">Skip to main content</a>
         <AppProvider>

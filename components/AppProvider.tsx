@@ -87,7 +87,7 @@ export const useApp = () => {
 export default function AppProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [theme, setThemeState] = useState<Theme>("dark");
-  const [data, setData] = useState<DataState>(() => (sb ? emptyData(DEFAULT_SETTINGS) : createSeed()));
+  const [data, setData] = useState<DataState>(() => createSeed());
   const [session, setSession] = useState<Session | null>(null);
   const dataRef = useRef<DataState>(data);
   const sessionRef = useRef<Session | null>(null);
@@ -101,7 +101,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     try {
       const s = await fetchSession(sb);
       const d = await loadAll(sb, s?.role, DEFAULT_SETTINGS);
-      if (!pending.current) { dataRef.current = d; setData(d); }
+      if (d && d.doctors && d.doctors.length > 0 && !pending.current) { dataRef.current = d; setData(d); }
       if (s && sessionRef.current && s.approval !== sessionRef.current.approval) { sessionRef.current = s; setSession(s); }
     } catch { /* offline: keep what is on screen */ }
   }, []);
@@ -140,8 +140,10 @@ export default function AppProvider({ children }: { children: ReactNode }) {
           const s = await fetchSession(sb);
           sessionRef.current = s; setSession(s);
           const d = await loadAll(sb, s?.role, DEFAULT_SETTINGS);
-          dataRef.current = d; setData(d);
-        } catch { /* keep empty data */ }
+          if (d && d.doctors && d.doctors.length > 0) {
+            dataRef.current = d; setData(d);
+          }
+        } catch { /* keep existing populated data */ }
         setReady(true);
       })();
       const { data: sub } = sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_OUT") { sessionRef.current = null; setSession(null); } });
@@ -149,15 +151,35 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     }
     const saved = readJSON<DataState>(KEYS.data);
     if (saved && saved.doctors && saved.appointments) {
+      const seed = createSeed();
+      if (!saved.doctors.length) saved.doctors = seed.doctors;
+      if (!saved.specializations?.length) saved.specializations = seed.specializations;
+
+      // Merge any newly introduced seed doctors (e.g. d13, d14 Neurologists, d15 Ophthalmologist)
+      const existingDocIds = new Set(saved.doctors.map((d) => d.id));
+      for (const sd of seed.doctors) {
+        if (!existingDocIds.has(sd.id)) {
+          saved.doctors.push(sd);
+        }
+      }
+
+      // Merge any newly introduced specializations (e.g. Ophthalmology)
+      const existingSpecs = new Set(saved.specializations.map((s) => s.name.toLowerCase()));
+      for (const sp of seed.specializations) {
+        if (!existingSpecs.has(sp.name.toLowerCase())) {
+          saved.specializations.push(sp);
+        }
+      }
+
       saved.payments = saved.payments ?? []; saved.reschedules = saved.reschedules ?? []; saved.applications = saved.applications ?? [];
-      saved.prescriptions = saved.prescriptions ?? createSeed().prescriptions;
-      saved.medicalRecords = saved.medicalRecords ?? createSeed().medicalRecords;
+      saved.prescriptions = saved.prescriptions ?? seed.prescriptions;
+      saved.medicalRecords = saved.medicalRecords ?? seed.medicalRecords;
       // keep the doctor portraits matching the (renamed) doctors in older saved demo data
       const RENAMED: Record<string, string> = { "Dr. Nadia Hussain": "Dr. Nadir Hussain", "Dr. Amna Javed": "Dr. Adnan Javed" };
       saved.doctors = saved.doctors.map((d) => {
         const n = /^d(\d+)$/.exec(d.id);
         const named = RENAMED[d.name] ? { ...d, name: RENAMED[d.name] } : d;
-        return n && Number(n[1]) <= 12 && (!named.photo || named.photo.startsWith("/doctors/")) ? { ...named, photo: `/doctors/d${n[1]}.jpg` } : named;
+        return n && Number(n[1]) <= 15 && (!named.photo || named.photo.startsWith("/doctors/")) ? { ...named, photo: `/doctors/d${n[1]}.jpg` } : named;
       });
       dataRef.current = saved; setData(saved);
     }

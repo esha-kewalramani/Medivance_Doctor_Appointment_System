@@ -51,7 +51,23 @@ export default function DoctorAppointmentsPage() {
             <thead><tr><th>Patient</th><th>Reference</th><th>Date</th><th>Time</th><th>Reason</th><th>Status</th><th className="text-right">Actions</th></tr></thead>
             <tbody>{rows.map((a) => (
               <tr key={a.id}>
-                <td className="font-semibold">{patientById(a.patientId)?.name ?? "Removed patient"}</td><td>{a.ref}</td><td>{fmtDate(a.date)}</td><td>{fmtTime(a.time)}</td>
+                <td className="font-semibold">
+                  {a.isGuest ? (
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span>{a.guestDetails?.name || patientById(a.patientId)?.name || "Guest"}</span>
+                        <span className="badge border-primary/30 bg-primary/10 text-primary text-[10px] py-0 px-1.5">Guest</span>
+                      </div>
+                      <p className="text-xs font-normal text-muted">{a.guestDetails?.phone || a.guestDetails?.email}</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <span>{patientById(a.patientId)?.name ?? "Removed patient"}</span>
+                      {patientById(a.patientId)?.phone && <p className="text-xs font-normal text-muted">{patientById(a.patientId)?.phone}</p>}
+                    </div>
+                  )}
+                </td>
+                <td>{a.ref}</td><td>{fmtDate(a.date)}</td><td>{fmtTime(a.time)}</td>
                 <td className="max-w-[220px] truncate" title={a.reason}>{a.reason}</td><td><span className="flex flex-wrap items-center gap-1.5"><StatusBadge status={a.status} />{isPaid(a.id) && <span className="badge badge-approved">PAID</span>}</span></td>
                 <td><div className="flex justify-end gap-1.5">
                   {a.status === "pending" && <><button className="btn-primary btn-sm" onClick={() => act(a, "approved")}><Check className="h-4 w-4" /> Approve</button><button className="btn-danger btn-sm" onClick={() => act(a, "rejected")}><X className="h-4 w-4" /> Reject</button></>}

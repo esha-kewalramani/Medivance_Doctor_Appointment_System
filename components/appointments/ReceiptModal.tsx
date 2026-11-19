@@ -40,7 +40,8 @@ export default function ReceiptModal({ a, doctor, open, onClose }: { a: Appointm
   const paidOn = pay ? new Date(pay.paidAt).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
   const rows: [string, string][] = [
     ["Receipt / Ref no.", a.ref],
-    ["Patient", p?.name ?? "-"],
+    ["Patient", (a.guestDetails?.name || p?.name) ?? "-"],
+    ...(a.isGuest ? [["Booking Type", "Guest Booking (No login required)"]] as [string, string][] : []),
     ["Doctor", doctor?.name ?? "-"],
     ["Specialty", doctor?.specialization ?? "-"],
     ["Date", fmtDate(a.date)],

@@ -9,8 +9,9 @@ import { assistantReply, BotReply, SUGGESTED_QUESTIONS } from "@/lib/ai/simulate
 interface Msg { id: number; from: "bot" | "me"; text: string; links?: BotReply["links"] }
 
 export default function AssistantPage() {
-  const { data, user } = useApp();
-  const [msgs, setMsgs] = useState<Msg[]>([{ id: 0, from: "bot", text: `Hi ${user?.name.split(" ")[0] ?? "there"}! I'm your MEDIVANCE assistant. Ask me about finding doctors, booking, cancelling or using the website.` }]);
+  const { data, user, session, patientById } = useApp();
+  const currentPatient = session ? patientById(session.userId) : null;
+  const [msgs, setMsgs] = useState<Msg[]>([{ id: 0, from: "bot", text: `Hi ${user?.name.split(" ")[0] ?? "there"}! I'm your MEDIVANCE assistant. Ask me about finding doctors, booking, cancelling, or reviewing your prescriptions & medical records.` }]);
   const [text, setText] = useState("");
   const [typing, setTyping] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -22,7 +23,12 @@ export default function AssistantPage() {
     setMsgs((m) => [...m, { id: Date.now(), from: "me", text: v }]);
     setText(""); setTyping(true);
     setTimeout(() => {
-      const r = assistantReply(v, data.doctors, data.specializations);
+      const r = assistantReply(v, data.doctors, data.specializations, {
+        session,
+        patient: currentPatient,
+        prescriptions: data.prescriptions,
+        medicalRecords: data.medicalRecords,
+      });
       setMsgs((m) => [...m, { id: Date.now() + 1, from: "bot", text: r.text, links: r.links }]);
       setTyping(false);
     }, 800);
