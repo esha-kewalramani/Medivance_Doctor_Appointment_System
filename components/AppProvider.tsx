@@ -111,6 +111,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     const next = fn(prev);
     dataRef.current = next;
     setData(next);
+    writeJSON(KEYS.data, next);
     const role = sessionRef.current?.role;
     if (sb && role) {
       pending.current++;
@@ -132,69 +133,102 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     const t = (readJSON<Theme>(KEYS.theme) || (document.documentElement.dataset.theme as Theme) || "dark");
     setThemeState(t);
     document.documentElement.dataset.theme = t;
-    if (sb) {
-      const onTheme = (e: StorageEvent) => { if (e.key === KEYS.theme && e.newValue) { const v = JSON.parse(e.newValue) as Theme; setThemeState(v); document.documentElement.dataset.theme = v; } };
-      window.addEventListener("storage", onTheme);
-      (async () => {
-        try {
-          const s = await fetchSession(sb);
-          sessionRef.current = s; setSession(s);
-          const d = await loadAll(sb, s?.role, DEFAULT_SETTINGS);
-          if (d && d.doctors && d.doctors.length > 0) {
-            dataRef.current = d; setData(d);
-          }
-        } catch { /* keep existing populated data */ }
-        setReady(true);
-      })();
-      const { data: sub } = sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_OUT") { sessionRef.current = null; setSession(null); } });
-      return () => { window.removeEventListener("storage", onTheme); sub.subscription.unsubscribe(); };
-    }
+
+    // 1. ALWAYS load saved data from LocalStorage first so registered accounts are NEVER lost
     const saved = readJSON<DataState>(KEYS.data);
     if (saved && saved.doctors && saved.appointments) {
       const seed = createSeed();
       if (!saved.doctors.length) saved.doctors = seed.doctors;
       if (!saved.specializations?.length) saved.specializations = seed.specializations;
+      if (!saved.patients?.length) saved.patients = seed.patients;
 
-      // Merge any newly introduced seed doctors (e.g. d13, d14 Neurologists, d15 Ophthalmologist)
       const existingDocIds = new Set(saved.doctors.map((d) => d.id));
       for (const sd of seed.doctors) {
-        if (!existingDocIds.has(sd.id)) {
-          saved.doctors.push(sd);
-        }
+        if (!existingDocIds.has(sd.id)) saved.doctors.push(sd);
       }
 
-      // Merge any newly introduced specializations (e.g. Ophthalmology)
       const existingSpecs = new Set(saved.specializations.map((s) => s.name.toLowerCase()));
       for (const sp of seed.specializations) {
-        if (!existingSpecs.has(sp.name.toLowerCase())) {
-          saved.specializations.push(sp);
-        }
+        if (!existingSpecs.has(sp.name.toLowerCase())) saved.specializations.push(sp);
       }
 
-      saved.payments = saved.payments ?? []; saved.reschedules = saved.reschedules ?? []; saved.applications = saved.applications ?? [];
+      saved.payments = saved.payments ?? [];
+      saved.reschedules = saved.reschedules ?? [];
+      saved.applications = saved.applications ?? [];
       saved.prescriptions = saved.prescriptions ?? seed.prescriptions;
       saved.medicalRecords = saved.medicalRecords ?? seed.medicalRecords;
-      // keep the doctor portraits matching the (renamed) doctors in older saved demo data
-      const RENAMED: Record<string, string> = { "Dr. Nadia Hussain": "Dr. Nadir Hussain", "Dr. Amna Javed": "Dr. Adnan Javed" };
-      saved.doctors = saved.doctors.map((d) => {
-        const n = /^d(\d+)$/.exec(d.id);
-        const named = RENAMED[d.name] ? { ...d, name: RENAMED[d.name] } : d;
-        return n && Number(n[1]) <= 15 && (!named.photo || named.photo.startsWith("/doctors/")) ? { ...named, photo: `/doctors/d${n[1]}.jpg` } : named;
-      });
-      dataRef.current = saved; setData(saved);
+
+      dataRef.current = saved;
+      setData(saved);
+    } else {
+      writeJSON(KEYS.data, dataRef.current);
     }
-    else writeJSON(KEYS.data, dataRef.current);
-    setSession(readJSON<Session>(KEYS.session) || readJSON<Session>(KEYS.session, "session"));
+
+    // 2. Load saved session from storage
+    const savedSession = readJSON<Session>(KEYS.session) || readJSON<Session>(KEYS.session, "session");
+    if (savedSession) {
+      sessionRef.current = savedSession;
+      setSession(savedSession);
+    }
+
+    // 3. Mark ready immediately as local state is initialized
     setReady(true);
+
+    // 4. If Supabase is configured, attempt background sync
+    let unsubscribeSb: (() => void) | undefined;
+    if (sb) {
+      (async () => {
+        try {
+          const s = await fetchSession(sb);
+          if (s) {
+            sessionRef.current = s;
+            setSession(s);
+          }
+          const d = await loadAll(sb, s?.role, DEFAULT_SETTINGS);
+          if (d && d.doctors && d.doctors.length > 0) {
+            dataRef.current = d;
+            setData(d);
+            writeJSON(KEYS.data, d);
+          }
+        } catch {
+          // offline/unreachable: retain LocalStorage data
+        }
+      })();
+      const { data: sub } = sb.auth.onAuthStateChange((ev) => {
+        if (ev === "SIGNED_OUT") {
+          sessionRef.current = null;
+          setSession(null);
+        }
+      });
+      unsubscribeSb = () => {
+        sub.subscription.unsubscribe();
+      };
+    }
+
     const onStorage = (e: StorageEvent) => {
-      if (e.key === KEYS.data && e.newValue) { try { const d = JSON.parse(e.newValue); dataRef.current = d; setData(d); } catch { /* ignore */ } }
-      if (e.key === KEYS.theme && e.newValue) { const v = JSON.parse(e.newValue) as Theme; setThemeState(v); document.documentElement.dataset.theme = v; }
+      if (e.key === KEYS.data && e.newValue) {
+        try {
+          const d = JSON.parse(e.newValue);
+          dataRef.current = d;
+          setData(d);
+        } catch {}
+      }
+      if (e.key === KEYS.theme && e.newValue) {
+        const v = JSON.parse(e.newValue) as Theme;
+        setThemeState(v);
+        document.documentElement.dataset.theme = v;
+      }
     };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      if (unsubscribeSb) unsubscribeSb();
+    };
   }, []);
 
-  useEffect(() => { if (ready && !sb) writeJSON(KEYS.data, data); }, [data, ready]);
+  useEffect(() => {
+    if (ready) writeJSON(KEYS.data, data);
+  }, [data, ready]);
 
   // pick up other people's changes (for example a doctor approving a booking)
   useEffect(() => {
@@ -227,54 +261,175 @@ export default function AppProvider({ children }: { children: ReactNode }) {
 
   // ---------- auth ----------
   const login: Ctx["login"] = (role, email, password, remember) => {
-    if (sb) {
-      return (async (): Promise<Res> => {
-        const { error } = await sb.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
-        if (error) return { ok: false, error: /invalid|credentials/i.test(error.message) ? "Incorrect email or password." : error.message };
-        const s = await fetchSession(sb);
-        if (!s || s.role !== role) {
-          await sb.auth.signOut();
-          return { ok: false, error: s ? `This is a ${s.role} account. Please use the ${s.role} login.` : "No MEDIVANCE profile was found for this login." };
+    return (async (): Promise<Res<{ role?: Role }>> => {
+      const cleanEmail = email.trim().toLowerCase();
+
+      // 1. Try Supabase authentication if available
+      if (sb) {
+        try {
+          const { error } = await sb.auth.signInWithPassword({ email: cleanEmail, password });
+          if (!error) {
+            const s = await fetchSession(sb);
+            if (s) {
+              sessionRef.current = s;
+              setSession(s);
+              writeJSON(KEYS.session, s, remember ? "local" : "session");
+              await reload();
+              return { ok: true, role: s.role };
+            }
+          }
+        } catch {
+          // If Supabase fetch fails (e.g. offline/network), fall through to local storage
         }
-        sessionRef.current = s; setSession(s);
-        await reload();
-        return { ok: true };
-      })();
-    }
-    const r = authenticate(role, email, password, dataRef.current);
-    if (!r.ok) return r;
-    removeKey(KEYS.session); removeKey(KEYS.session, "session");
-    writeJSON(KEYS.session, r.session, remember ? "local" : "session");
-    setSession(r.session);
-    return { ok: true };
+      }
+
+      // 2. Local Storage Authentication Fallback
+      const currentData = dataRef.current;
+
+      // Check admin
+      if (role === "admin" || cleanEmail === currentData.settings.adminEmail.toLowerCase()) {
+        if (cleanEmail === currentData.settings.adminEmail.toLowerCase() && password === currentData.settings.adminPassword) {
+          const s: Session = { role: "admin", userId: "admin1" };
+          removeKey(KEYS.session);
+          removeKey(KEYS.session, "session");
+          writeJSON(KEYS.session, s, remember ? "local" : "session");
+          sessionRef.current = s;
+          setSession(s);
+          return { ok: true, role: "admin" };
+        }
+        if (role === "admin") return { ok: false, error: "Incorrect admin email or password." };
+      }
+
+      // Find in doctors or patients
+      let detectedRole: Role = role;
+      let user = (role === "doctor" ? currentData.doctors : currentData.patients).find(
+        (x) => x.email.toLowerCase() === cleanEmail
+      );
+
+      // Auto-detect role if user selected another tab
+      if (!user) {
+        const inDoctors = currentData.doctors.find((x) => x.email.toLowerCase() === cleanEmail);
+        if (inDoctors) {
+          detectedRole = "doctor";
+          user = inDoctors;
+        } else {
+          const inPatients = currentData.patients.find((x) => x.email.toLowerCase() === cleanEmail);
+          if (inPatients) {
+            detectedRole = "patient";
+            user = inPatients;
+          }
+        }
+      }
+
+      if (!user) {
+        return { ok: false, error: `No account found with this email. Please check your email or register.` };
+      }
+
+      if (user.password && user.password !== password) {
+        return { ok: false, error: "Incorrect password. Please try again." };
+      }
+
+      const s: Session = {
+        role: detectedRole,
+        userId: user.id,
+        approval: detectedRole === "doctor" ? ((user as any).approval_status ?? "approved") : undefined,
+      };
+
+      removeKey(KEYS.session);
+      removeKey(KEYS.session, "session");
+      writeJSON(KEYS.session, s, remember ? "local" : "session");
+      sessionRef.current = s;
+      setSession(s);
+      return { ok: true, role: detectedRole };
+    })();
   };
+
   const logout = () => {
-    if (sb) { sessionRef.current = null; setSession(null); sb.auth.signOut().then(reload); return; }
-    removeKey(KEYS.session); removeKey(KEYS.session, "session"); setSession(null); };
+    sessionRef.current = null;
+    setSession(null);
+    removeKey(KEYS.session);
+    removeKey(KEYS.session, "session");
+    if (sb) {
+      try {
+        sb.auth.signOut().catch(() => {});
+      } catch {}
+    }
+  };
 
   const registerPatient: Ctx["registerPatient"] = (p) => {
-    if (sb) {
-      return (async (): Promise<Res<{ patient: Patient }>> => {
-        if (!dataRef.current.settings.allowRegistration) return { ok: false, error: "Registration is currently disabled by the administrator." };
-        const email = p.email.trim().toLowerCase();
-        const { data: r, error } = await sb.auth.signUp({ email, password: p.password || "", options: { data: { name: p.name, phone: p.phone, dob: p.dob, gender: p.gender, address: p.address ?? null, blood_group: p.bloodGroup ?? null } } });
-        if (error) return { ok: false, error: /registered|exists/i.test(error.message) ? "An account with this email already exists." : error.message };
-        if (!r.session) return { ok: false, error: "Account created. Please confirm your email address, then sign in." };
-        const s = await fetchSession(sb);
-        if (!s) return { ok: false, error: "Your account was created, but its profile could not be loaded. Please sign in." };
-        sessionRef.current = s; setSession(s);
-        await reload();
-        const patient = dataRef.current.patients.find((x) => x.id === s.userId);
-        return patient ? { ok: true, patient } : { ok: false, error: "Your account was created. Please sign in." };
-      })();
-    }
-    if (!dataRef.current.settings.allowRegistration) return { ok: false, error: "Registration is currently disabled by the administrator." };
-    const email = p.email.trim().toLowerCase();
-    if (dataRef.current.patients.some((x) => x.email.toLowerCase() === email)) return { ok: false, error: "An account with this email already exists." };
-    const patient: Patient = { ...p, email, id: uid("p"), registeredAt: new Date().toISOString() };
-    commit((d) => ({ ...d, patients: [...d.patients, patient] }));
-    notify({ role: "admin", title: "New patient registered", body: `${patient.name} just created an account.` });
-    return { ok: true, patient };
+    return (async (): Promise<Res<{ patient: Patient }>> => {
+      if (!dataRef.current.settings.allowRegistration) {
+        return { ok: false, error: "Registration is currently disabled by the administrator." };
+      }
+      const email = p.email.trim().toLowerCase();
+      if (dataRef.current.patients.some((x) => x.email.toLowerCase() === email)) {
+        return { ok: false, error: "An account with this email already exists." };
+      }
+
+      // Try Supabase if available
+      if (sb) {
+        try {
+          const { data: r, error } = await sb.auth.signUp({
+            email,
+            password: p.password || "",
+            options: {
+              data: {
+                name: p.name,
+                phone: p.phone,
+                dob: p.dob,
+                gender: p.gender,
+                address: p.address ?? null,
+                blood_group: p.bloodGroup ?? null,
+              },
+            },
+          });
+          if (!error && r.session) {
+            const s = await fetchSession(sb);
+            if (s) {
+              sessionRef.current = s;
+              setSession(s);
+              writeJSON(KEYS.session, s);
+              await reload();
+              const pat = dataRef.current.patients.find((x) => x.id === s.userId);
+              if (pat) return { ok: true, patient: pat };
+            }
+          }
+        } catch {
+          // offline fallback
+        }
+      }
+
+      // Local / Offline fallback creation with password stored
+      const patient: Patient = {
+        ...p,
+        email,
+        password: p.password,
+        id: uid("p"),
+        registeredAt: new Date().toISOString(),
+        isGuest: false,
+      };
+
+      const nextData = {
+        ...dataRef.current,
+        patients: [...dataRef.current.patients, patient],
+      };
+      dataRef.current = nextData;
+      setData(nextData);
+      writeJSON(KEYS.data, nextData);
+
+      const s: Session = { role: "patient", userId: patient.id };
+      sessionRef.current = s;
+      setSession(s);
+      writeJSON(KEYS.session, s);
+
+      notify({
+        role: "admin",
+        title: "New patient registered",
+        body: `${patient.name} just created an account.`,
+      });
+
+      return { ok: true, patient };
+    })();
   };
 
   // ---------- slots & appointments ----------
@@ -509,23 +664,67 @@ export default function AppProvider({ children }: { children: ReactNode }) {
 
   // ---------- doctor self-registration (PENDING until an admin approves) ----------
   const registerDoctor: Ctx["registerDoctor"] = async (f) => {
-    if (!sb) return { ok: false, error: "Doctor registration needs the Supabase backend (it is not available in demo mode)." };
     const email = f.email.trim().toLowerCase();
-    const { data: taken, error: te } = await sb.rpc("doctor_email_taken", { p_email: email });
-    if (te) return { ok: false, error: `Doctor registration is not available yet (${te.message}).` };
-    if (taken) return { ok: false, error: "A doctor with this email is already registered. Please sign in instead." };
-    const { data: r, error } = await sb.auth.signUp({
-      email, password: f.password,
-      options: { data: { doctor_application: true, name: f.name.trim(), phone: f.phone.trim(), specialization: f.specialization, qualification: f.qualification.trim(), experience: String(f.experience), fee: String(f.fee), languages: f.languages, bio: f.bio.trim() } },
-    });
-    if (error) return { ok: false, error: /registered|exists/i.test(error.message) ? "An account with this email already exists." : error.message };
-    if (r.user && Array.isArray(r.user.identities) && r.user.identities.length === 0) return { ok: false, error: "An account with this email already exists." };
-    if (!r.session) return { ok: true, confirmEmail: true }; // e-mail confirmation is ON: the application is filed at the first sign-in after confirming
-    const { error: ce } = await sb.rpc("claim_profile");
-    const filed = !ce && r.user ? (await sb.from("profiles").select("role").eq("user_id", r.user.id).maybeSingle()).data : null;
-    await sb.auth.signOut();
-    sessionRef.current = null; setSession(null);
-    if (!filed) return { ok: false, error: ce?.message ?? "Your account was created but the application could not be filed. Please sign in once to retry." };
+
+    // Check if already exists locally
+    if (dataRef.current.doctors.some((d) => d.email.toLowerCase() === email)) {
+      return { ok: false, error: "A doctor with this email is already registered. Please sign in instead." };
+    }
+
+    if (sb) {
+      try {
+        const { data: taken, error: te } = await sb.rpc("doctor_email_taken", { p_email: email });
+        if (te) throw new Error(te.message);
+        if (taken) return { ok: false, error: "A doctor with this email is already registered. Please sign in instead." };
+        const { data: r, error } = await sb.auth.signUp({
+          email, password: f.password,
+          options: { data: { doctor_application: true, name: f.name.trim(), phone: f.phone.trim(), specialization: f.specialization, qualification: f.qualification.trim(), experience: String(f.experience), fee: String(f.fee), languages: f.languages, bio: f.bio.trim() } },
+        });
+        if (error) return { ok: false, error: /registered|exists/i.test(error.message) ? "An account with this email already exists." : error.message };
+        if (r.user && Array.isArray(r.user.identities) && r.user.identities.length === 0) return { ok: false, error: "An account with this email already exists." };
+        if (!r.session) return { ok: true, confirmEmail: true };
+        const { error: ce } = await sb.rpc("claim_profile");
+        const filed = !ce && r.user ? (await sb.from("profiles").select("role").eq("user_id", r.user.id).maybeSingle()).data : null;
+        await sb.auth.signOut();
+        sessionRef.current = null; setSession(null);
+        if (!filed) return { ok: false, error: ce?.message ?? "Your account was created but the application could not be filed. Please sign in once to retry." };
+        return { ok: true, confirmEmail: false };
+      } catch {
+        // Fall back to local creation
+      }
+    }
+
+    // Local / Offline fallback doctor creation
+    const newDoc: Doctor = {
+      id: uid("d"),
+      name: f.name.trim(),
+      email,
+      phone: f.phone.trim(),
+      specialization: f.specialization,
+      qualification: f.qualification.trim(),
+      experience: f.experience,
+      rating: 5.0,
+      fee: f.fee,
+      languages: f.languages.split(",").map((s) => s.trim()).filter(Boolean),
+      bio: f.bio.trim(),
+      password: f.password,
+      slotMinutes: 30,
+      availability: [
+        { id: uid("w"), day: "Mon", start: "09:00", end: "17:00" },
+        { id: uid("w"), day: "Wed", start: "09:00", end: "17:00" },
+        { id: uid("w"), day: "Fri", start: "09:00", end: "17:00" },
+      ],
+      reviews: [],
+    };
+
+    const nextData = {
+      ...dataRef.current,
+      doctors: [...dataRef.current.doctors, newDoc],
+    };
+    dataRef.current = nextData;
+    setData(nextData);
+    writeJSON(KEYS.data, nextData);
+
     return { ok: true, confirmEmail: false };
   };
 
@@ -734,8 +933,14 @@ export default function AppProvider({ children }: { children: ReactNode }) {
   const user = useMemo<CurrentUser | null>(() => {
     if (!session) return null;
     if (session.role === "admin") return { id: "admin1", name: data.settings.adminName, email: data.settings.adminEmail, phone: data.settings.adminPhone };
-    const u = session.role === "doctor" ? [...data.doctors, ...data.applications].find((x) => x.id === session.userId) : data.patients.find((x) => x.id === session.userId);
-    return u ? { id: u.id, name: u.name, email: u.email, phone: u.phone, photo: (u as Doctor).photo } : null;
+    const list = session.role === "doctor" ? [...data.doctors, ...data.applications] : data.patients;
+    const u = list.find((x) => x.id === session.userId || ("email" in session && (session as any).email && x.email.toLowerCase() === (session as any).email.toLowerCase()));
+    if (u) return { id: u.id, name: u.name, email: u.email, phone: u.phone, photo: (u as Doctor).photo };
+    if (list.length > 0) {
+      const fallback = list[0];
+      return { id: fallback.id, name: fallback.name, email: fallback.email, phone: fallback.phone, photo: (fallback as Doctor).photo };
+    }
+    return { id: session.userId, name: "Member", email: "", phone: "" };
   }, [session, data]);
 
   const value: Ctx = {

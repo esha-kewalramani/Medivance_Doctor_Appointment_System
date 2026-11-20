@@ -10,6 +10,7 @@ const config: Config = {
       colors: {
         bg: v("bg"),
         surface: v("surface"),
+        "surface-2": v("surface-2"),
         card: v("card"),
         line: v("line"),
         fg: v("fg"),

@@ -8,6 +8,7 @@
   color-scheme: dark;
   --bg: 3 11 30;
   --surface: 9 26 58;
+  --surface-2: 14 36 78;
   --card: 12 32 70;
   --line: 70 130 220;
   --fg: 232 241 255;
@@ -38,6 +39,7 @@
   color-scheme: light;
   --bg: 244 249 252;
   --surface: 255 255 255;
+  --surface-2: 240 246 250;
   --card: 255 255 255;
   --line: 186 212 226;
   --fg: 10 40 72;

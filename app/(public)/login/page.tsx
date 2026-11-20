@@ -1,5 +1,10 @@
-import RoleCards from "@/components/forms/RoleCards";
+import UnifiedAuthCard from "@/components/forms/UnifiedAuthCard";
 
-export default function LoginRolePage() {
-  return <RoleCards />;
+export const metadata = {
+  title: "Sign In | MEDIVANCE",
+  description: "Sign in to your MEDIVANCE patient, doctor, or administrator portal.",
+};
+
+export default function LoginPage() {
+  return <UnifiedAuthCard />;
 }

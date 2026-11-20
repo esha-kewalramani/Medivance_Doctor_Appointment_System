@@ -8,7 +8,6 @@ import ForgotPasswordModal from "@/components/forms/ForgotPasswordModal";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { useApp } from "@/hooks/useApp";
 import { useQueryParam } from "@/hooks/useQueryParam";
-import { DEMO_ACCOUNTS } from "@/lib/mock-data";
 import { isEmail } from "@/lib/validation";
 import { toast } from "@/components/notifications/alerts";
 import { Role } from "@/types";
@@ -44,8 +43,6 @@ export default function LoginForm({ role }: { role: Role }) {
     router.push(next && next.startsWith("/") ? next : `/${role}`);
   };
 
-  const demo = () => { const a = DEMO_ACCOUNTS[role]; setF({ ...f, email: a.email, password: a.password }); setErr({}); };
-
   return (
     <div className="container-x flex min-h-[70vh] items-center justify-center py-10">
       <div className="card w-full max-w-md p-6 sm:p-8">
@@ -75,7 +72,6 @@ export default function LoginForm({ role }: { role: Role }) {
           </div>
           <button className="btn-primary w-full !py-3"><LogIn className="h-4 w-4" /> Sign in</button>
         </form>
-        <button onClick={demo} className="btn-ghost mt-3 w-full">Fill demo {role} account</button>
         <div className="mt-5 flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
           <Link href="/login" className="hover:text-primary">&larr; Change role</Link>
           {role === "patient" && <span>New here? <Link href="/register" className="font-semibold text-primary hover:underline">Create account</Link></span>}

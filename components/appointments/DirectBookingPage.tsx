@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertTriangle,
   Calendar as CalendarIcon,
   Check,
   CheckCircle2,
@@ -19,6 +20,7 @@ import {
   Star,
   Stethoscope,
   UserPlus,
+  UserRound,
   Zap,
 } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
@@ -579,9 +581,9 @@ export default function DirectBookingPage() {
         </section>
 
         {/* ========================================================= */}
-        {/* MASTER BOOKING CONSOLE (MOVED UPWARD TO OVERLAP)          */}
+        {/* MASTER BOOKING CONSOLE (DUAL THEME COMPATIBLE)            */}
         {/* ========================================================= */}
-        <div className="relative z-20 -mt-4 sm:-mt-6 lg:-mt-8 w-full rounded-3xl sm:rounded-[2.5rem] border border-line/60 bg-surface/90 p-4 sm:p-6 lg:p-7 backdrop-blur-2xl shadow-2xl space-y-5 sm:space-y-6">
+        <div className="relative z-20 -mt-4 sm:-mt-6 lg:-mt-8 w-full rounded-3xl sm:rounded-[2.5rem] border border-slate-200/90 dark:border-line/60 bg-white/95 dark:bg-surface/90 p-3.5 sm:p-5 md:p-6 lg:p-7 backdrop-blur-2xl shadow-xl dark:shadow-2xl space-y-5 sm:space-y-6">
           {/* SIMULATED PAYMENT PROCESSING OVERLAY */}
           {paying && (
             <div className="absolute inset-0 z-50 grid place-items-center rounded-[inherit] bg-surface/90 backdrop-blur-md animate-fade-in" role="status" aria-live="polite">
@@ -599,8 +601,80 @@ export default function DirectBookingPage() {
             </div>
           )}
 
-          {/* 5-STEP PROGRESS BAR (EXACT CIRCLES, LINES & LABELS) */}
-          <div className="relative mx-auto max-w-3xl w-full px-2 sm:px-4">
+          {/* ========================================================= */}
+          {/* PATIENT LOGIN / SIGN UP BANNER                            */}
+          {/* ========================================================= */}
+          {!loggedPatient ? (
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-sky-100 bg-gradient-to-r from-sky-50/90 via-blue-50/50 to-sky-50/90 p-3.5 sm:p-4 md:p-5 shadow-xs transition-all dark:border-primary/25 dark:from-sky-950/40 dark:via-surface-2/60 dark:to-blue-950/40">
+              <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
+                {/* Left: User Icon + Text */}
+                <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0">
+                  <span className="grid h-10 w-10 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-full bg-cyan-100 text-cyan-700 shadow-xs dark:bg-primary/20 dark:text-primary">
+                    <UserRound className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </span>
+                  <div className="min-w-0 space-y-0.5">
+                    <h3 className="font-display text-sm sm:text-base md:text-lg font-bold text-slate-900 dark:text-fg tracking-tight">
+                      Want your own personal space?
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-muted leading-relaxed">
+                      Sign in or create a patient account to manage your appointments and view your booking history.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: Decorative Pulse & Action Button */}
+                <div className="flex items-center justify-end gap-3 shrink-0 pt-1 sm:pt-0">
+                  {/* Subtle Decorative Heartbeat Line */}
+                  <svg
+                    className="hidden md:block h-6 w-20 text-cyan-500/35 dark:text-primary/30 shrink-0"
+                    viewBox="0 0 100 30"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M0 15 h30 l5 -10 l5 20 l6 -16 l4 10 l5 -4 h45" />
+                  </svg>
+
+                  <Link
+                    href="/login/patient"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold bg-[#1e3a8a] text-white hover:bg-blue-900 transition-all active:scale-95 shadow-md hover:shadow-lg dark:bg-primary dark:text-primary-fg dark:hover:brightness-110 dark:shadow-glow"
+                  >
+                    <UserRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span>Patient Login / Sign Up</span>
+                    <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-ok/30 bg-ok/5 p-3.5 sm:p-4 text-xs sm:text-sm text-muted flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ok/15 text-ok">
+                  <UserRound className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-display font-semibold text-fg text-sm">
+                    Welcome back, <span className="text-primary">{loggedPatient.name}</span>
+                  </p>
+                  <p className="text-xs text-muted">
+                    Booking directly with your registered patient profile ({loggedPatient.email}).
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/patient"
+                className="btn-ghost btn-sm !rounded-full !px-4 text-xs font-semibold self-start sm:self-auto"
+              >
+                Go to Dashboard &rarr;
+              </Link>
+            </div>
+          )}
+
+          {/* 5-STEP PROGRESS BAR (RESPONSIVE FOR ALL SCREEN SIZES) */}
+          <div className="relative mx-auto max-w-3xl w-full px-1 sm:px-4">
             <div className="flex items-center justify-between w-full">
               {STEPS.map(({ stepNum, label }, idx) => {
                 const isCompleted = activeStep > stepNum;
@@ -610,18 +684,18 @@ export default function DirectBookingPage() {
                   <div key={stepNum} className={`flex items-center ${idx < 4 ? "flex-1" : ""}`}>
                     <div className="flex flex-col items-center shrink-0">
                       <span
-                        className={`grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full text-xs sm:text-sm font-bold transition-all ${
+                        className={`grid h-7 w-7 sm:h-9 sm:w-10 place-items-center rounded-full text-[11px] sm:text-sm font-bold transition-all ${
                           isActive
-                            ? "bg-primary text-primary-fg shadow-glow ring-4 ring-primary/25 scale-105"
+                            ? "bg-primary text-primary-fg shadow-glow ring-2 sm:ring-4 ring-primary/25 scale-105"
                             : isCompleted
                             ? "bg-primary/20 text-primary border border-primary/40"
                             : "border border-line/70 bg-surface-2/60 text-muted"
                         }`}
                       >
-                        {isCompleted ? <Check className="h-3.5 w-3.5 stroke-[2.5]" /> : stepNum}
+                        {isCompleted ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 stroke-[2.5]" /> : stepNum}
                       </span>
                       <span
-                        className={`mt-1.5 text-[10px] sm:text-xs font-semibold text-center whitespace-nowrap transition-colors ${
+                        className={`mt-1 sm:mt-1.5 text-[9px] sm:text-xs font-semibold text-center leading-tight max-w-[56px] sm:max-w-none transition-colors ${
                           isActive ? "text-primary font-bold" : isCompleted ? "text-fg font-medium" : "text-muted"
                         }`}
                       >
@@ -632,7 +706,7 @@ export default function DirectBookingPage() {
                     {/* Connecting line */}
                     {idx < 4 && (
                       <div
-                        className={`h-0.5 flex-1 mx-2 sm:mx-3 -mt-4 transition-colors ${
+                        className={`h-0.5 flex-1 mx-1 sm:mx-2 md:mx-3 -mt-3 sm:-mt-4 transition-colors ${
                           activeStep > stepNum ? "bg-primary" : "bg-line/40"
                         }`}
                       />
@@ -646,29 +720,29 @@ export default function DirectBookingPage() {
           {/* ======================================================= */}
           {/* ROW 1: CHOOSE YOUR DOCTOR (LEFT) & SELECT DATE (RIGHT)  */}
           {/* ======================================================= */}
-          <div className="w-full grid gap-5 lg:gap-6 lg:grid-cols-12 items-stretch">
+          <div className="w-full min-w-0 grid gap-5 lg:gap-6 grid-cols-1 lg:grid-cols-12 items-start">
             {/* LEFT: CHOOSE YOUR DOCTOR */}
-            <div className="lg:col-span-7 xl:col-span-8 flex flex-col justify-between space-y-3.5">
+            <div className="w-full min-w-0 lg:col-span-7 xl:col-span-8 flex flex-col space-y-3.5">
               {/* Choose Doctor Header with Scroll Chevrons */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
                     <Stethoscope className="h-4 w-4" />
                   </span>
-                  <div>
-                    <h2 className="font-display text-base sm:text-lg font-bold text-fg">Choose Your Doctor</h2>
-                    <p className="text-[11px] text-muted">
+                  <div className="min-w-0">
+                    <h2 className="font-display text-base sm:text-lg font-bold text-fg truncate">Choose Your Doctor</h2>
+                    <p className="text-[11px] text-muted truncate">
                       Browse our expert doctors and select the one you prefer.
                     </p>
                   </div>
                 </div>
 
                 {/* Left/Right Scroll Arrows */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
                     onClick={() => scrollDoctors("left")}
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-line/70 bg-surface-2/70 text-muted hover:text-fg hover:border-primary hover:bg-surface-2 transition active:scale-95 shadow-xs"
+                    className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 dark:border-line/70 bg-slate-50 dark:bg-surface-2/70 text-muted hover:text-fg hover:border-primary hover:bg-slate-100 dark:hover:bg-surface-2 transition active:scale-95 shadow-xs"
                     title="Scroll left"
                     aria-label="Scroll doctors left"
                   >
@@ -677,7 +751,7 @@ export default function DirectBookingPage() {
                   <button
                     type="button"
                     onClick={() => scrollDoctors("right")}
-                    className="grid h-7 w-7 place-items-center rounded-lg border border-line/70 bg-surface-2/70 text-muted hover:text-fg hover:border-primary hover:bg-surface-2 transition active:scale-95 shadow-xs"
+                    className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 dark:border-line/70 bg-slate-50 dark:bg-surface-2/70 text-muted hover:text-fg hover:border-primary hover:bg-slate-100 dark:hover:bg-surface-2 transition active:scale-95 shadow-xs"
                     title="Scroll right"
                     aria-label="Scroll doctors right"
                   >
@@ -687,20 +761,20 @@ export default function DirectBookingPage() {
               </div>
 
               {/* Search & Filter Row */}
-              <div className="grid gap-2 sm:grid-cols-12">
-                <div className="sm:col-span-8 relative">
+              <div className="grid gap-2 grid-cols-1 sm:grid-cols-12 w-full min-w-0">
+                <div className="sm:col-span-7 md:col-span-8 relative min-w-0">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
-                    className="input pl-8 text-xs !py-2 !rounded-xl"
+                    className="input pl-8 text-xs !py-2 !rounded-xl w-full bg-white dark:bg-surface/80 border-slate-200 dark:border-line/60"
                     placeholder="Search doctor by name or specialization..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <div className="sm:col-span-4">
+                <div className="sm:col-span-5 md:col-span-4 min-w-0">
                   <select
-                    className="input text-xs !py-2 !rounded-xl"
+                    className="input text-xs !py-2 !rounded-xl w-full bg-white dark:bg-surface/80 border-slate-200 dark:border-line/60"
                     value={selectedSpec}
                     onChange={(e) => setSelectedSpec(e.target.value)}
                   >
@@ -713,10 +787,10 @@ export default function DirectBookingPage() {
               </div>
 
               {/* HORIZONTAL SCROLLABLE DOCTOR CARDS (MATCHING REFERENCE DESIGN) */}
-              <div className="relative">
+              <div className="relative w-full min-w-0 overflow-hidden">
                 <div
                   ref={doctorListRef}
-                  className="custom-horizontal-scrollbar flex gap-3 overflow-x-auto pb-4 pt-1.5 scroll-smooth snap-x snap-mandatory focus:outline-none"
+                  className="custom-horizontal-scrollbar flex gap-2.5 sm:gap-3 overflow-x-auto w-full min-w-0 max-w-full pb-4 pt-1.5 scroll-smooth snap-x snap-mandatory focus:outline-none"
                 >
                   {filteredDoctors.map((d) => {
                     const isSelected = selectedDoctor?.id === d.id;
@@ -729,10 +803,10 @@ export default function DirectBookingPage() {
                           setSelectedTime("");
                           setErrors((prev) => ({ ...prev, doctor: "" }));
                         }}
-                        className={`card relative flex flex-col justify-between overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 transition-all cursor-pointer border shrink-0 w-[185px] sm:w-[205px] snap-start ${
+                        className={`card relative flex flex-col justify-between overflow-hidden rounded-2xl sm:rounded-3xl p-3 sm:p-3.5 md:p-4 transition-all cursor-pointer border shrink-0 w-[170px] sm:w-[190px] md:w-[205px] snap-start ${
                           isSelected
                             ? "border-2 !border-primary bg-primary/10 shadow-glow ring-2 ring-primary/40"
-                            : "border-line/70 bg-surface-2/50 hover:border-primary/50"
+                            : "border-slate-200/90 bg-white hover:border-primary/50 dark:border-line/70 dark:bg-surface-2/50 shadow-xs"
                         }`}
                       >
                         {/* Top Checkmark Badge if Selected */}
@@ -784,7 +858,7 @@ export default function DirectBookingPage() {
                           className={`mt-3 w-full py-2 px-3 rounded-xl text-xs font-semibold transition ${
                             isSelected
                               ? "bg-primary text-primary-fg shadow-md hover:brightness-110"
-                              : "border border-line/80 bg-surface-2/70 text-fg hover:border-primary/60 hover:bg-surface-2"
+                              : "border border-slate-200 dark:border-line/80 bg-slate-50 dark:bg-surface-2/70 text-slate-700 dark:text-fg hover:border-primary/60 hover:bg-slate-100 dark:hover:bg-surface-2"
                           }`}
                         >
                           Select Doctor
@@ -802,46 +876,46 @@ export default function DirectBookingPage() {
 
                 {/* Sub-bar scroll indicator & doctor count */}
                 {filteredDoctors.length > 3 && (
-                  <div className="flex items-center justify-between pt-1 px-1 text-[10px] text-muted">
-                    <span className="flex items-center gap-1 text-primary font-medium">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                  <div className="flex items-center justify-between pt-1 px-1 text-[10px] text-muted w-full min-w-0">
+                    <span className="flex items-center gap-1 text-primary font-medium truncate">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shrink-0" />
                       Showing all {filteredDoctors.length} doctors — scroll horizontally or use arrows
                     </span>
-                    <span className="hidden sm:inline text-muted/80">Scrollbar below cards</span>
+                    <span className="hidden sm:inline text-muted/80 shrink-0">Scrollbar below cards</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* RIGHT: SELECT DATE (INTERACTIVE CALENDAR) */}
-            <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-between space-y-3 rounded-2xl border border-line/60 bg-surface-2/40 p-3.5 sm:p-4">
-              <div className="flex items-center gap-2.5">
+            <div className="w-full min-w-0 lg:col-span-5 xl:col-span-4 flex flex-col space-y-3 rounded-2xl border border-slate-200/90 dark:border-line/60 bg-white dark:bg-surface-2/40 p-3.5 sm:p-4 shadow-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
                   <CalendarIcon className="h-4 w-4" />
                 </span>
-                <div>
-                  <h2 className="font-display text-base sm:text-lg font-bold text-fg">Select Date</h2>
-                  <p className="text-[11px] text-muted">Choose a convenient date for your appointment.</p>
+                <div className="min-w-0">
+                  <h2 className="font-display text-base sm:text-lg font-bold text-fg truncate">Select Date</h2>
+                  <p className="text-[11px] text-muted truncate">Choose a convenient date for your appointment.</p>
                 </div>
               </div>
 
               {/* Month Navigation */}
-              <div className="flex items-center justify-between border-b border-line/40 pb-2">
+              <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-line/40 pb-2">
                 <button
                   type="button"
                   onClick={prevMonth}
-                  className="rounded-lg p-1 hover:bg-surface text-muted hover:text-fg transition"
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 dark:border-line/70 bg-slate-50 dark:bg-surface-2/70 text-muted hover:text-fg hover:border-primary transition shrink-0"
                   aria-label="Previous Month"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
-                <span className="font-display text-xs sm:text-sm font-bold text-fg">
+                <span className="font-display text-xs sm:text-sm font-bold text-fg text-center truncate px-2">
                   {MONTH_NAMES[calMonth]} {calYear}
                 </span>
                 <button
                   type="button"
                   onClick={nextMonth}
-                  className="rounded-lg p-1 hover:bg-surface text-muted hover:text-fg transition"
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 dark:border-line/70 bg-slate-50 dark:bg-surface-2/70 text-muted hover:text-fg hover:border-primary transition shrink-0"
                   aria-label="Next Month"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -849,9 +923,9 @@ export default function DirectBookingPage() {
               </div>
 
               {/* Day Headers */}
-              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-muted">
+              <div className="grid grid-cols-7 gap-1 text-center text-[11px] sm:text-xs font-semibold text-muted py-0.5">
                 {DAY_HEADERS.map((h) => (
-                  <div key={h} className="py-0.5">{h}</div>
+                  <div key={h} className="truncate">{h}</div>
                 ))}
               </div>
 
@@ -872,14 +946,14 @@ export default function DirectBookingPage() {
                         setSelectedTime("");
                         setErrors((prev) => ({ ...prev, date: "" }));
                       }}
-                      className={`h-7 w-7 sm:h-8 sm:w-8 mx-auto rounded-full flex items-center justify-center font-semibold text-xs transition ${
+                      className={`aspect-square w-full max-w-[34px] sm:max-w-[36px] mx-auto rounded-full flex items-center justify-center font-semibold text-xs transition ${
                         isSelected
                           ? "bg-primary text-primary-fg shadow-glow font-bold scale-105 ring-2 ring-primary/40"
                           : canClick
-                          ? "hover:bg-primary/20 text-fg cursor-pointer"
+                          ? "hover:bg-primary/15 text-slate-800 dark:text-fg cursor-pointer font-medium"
                           : isCurrent
-                          ? "text-muted/40 cursor-not-allowed"
-                          : "text-muted/20 cursor-not-allowed"
+                          ? "text-slate-400 dark:text-muted/40 cursor-not-allowed"
+                          : "text-slate-300 dark:text-muted/20 cursor-not-allowed"
                       }`}
                     >
                       {cd.dayNumber}
@@ -889,7 +963,7 @@ export default function DirectBookingPage() {
               </div>
 
               {selectedDate && (
-                <div className="pt-2 text-[11px] text-muted flex items-center justify-between border-t border-line/40">
+                <div className="pt-2 text-[11px] text-muted flex items-center justify-between border-t border-slate-200/80 dark:border-line/40">
                   <span>Selected: <b className="text-primary font-semibold">{fmtDate(selectedDate)}</b></span>
                   <span>({weekdayOf(selectedDate)})</span>
                 </div>
@@ -900,14 +974,14 @@ export default function DirectBookingPage() {
           {/* ======================================================= */}
           {/* DIVIDER BETWEEN ROW 1 AND ROW 2                         */}
           {/* ======================================================= */}
-          <div className="w-full border-t border-line/40 my-6 sm:my-8" />
+          <div className="w-full border-t border-slate-200/90 dark:border-line/40 my-6 sm:my-8" />
 
           {/* ======================================================= */}
           {/* ROW 2: TIME SLOTS (LEFT) & PATIENT DETAILS (RIGHT)      */}
           {/* ======================================================= */}
-          <div className="w-full grid gap-5 lg:gap-6 lg:grid-cols-12 items-start">
+          <div className="w-full min-w-0 grid gap-5 lg:gap-6 grid-cols-1 lg:grid-cols-12 items-start">
             {/* LEFT: AVAILABLE TIME SLOTS (2 ROWS OF 4 PILLS) */}
-            <div className="lg:col-span-6 space-y-3.5">
+            <div className="w-full min-w-0 lg:col-span-6 space-y-3.5">
               <div className="flex items-center gap-2.5">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
                   <Clock className="h-4 w-4" />
@@ -937,8 +1011,8 @@ export default function DirectBookingPage() {
                         isSelected
                           ? "bg-primary text-primary-fg border-primary shadow-glow ring-2 ring-primary/40"
                           : isFree
-                          ? "border-line/60 bg-surface-2/50 text-fg hover:border-primary hover:text-primary hover:bg-primary/5"
-                          : "border-line/30 bg-muted/10 text-muted line-through opacity-40 cursor-not-allowed"
+                          ? "border-slate-200 bg-white text-slate-800 hover:border-primary hover:text-primary dark:border-line/60 dark:bg-surface-2/50 dark:text-fg hover:bg-primary/5"
+                          : "border-slate-200/60 bg-slate-100/60 text-slate-400 dark:border-line/30 dark:bg-muted/10 dark:text-muted line-through opacity-40 cursor-not-allowed"
                       }`}
                     >
                       {fmtTime(s.time)}
@@ -949,7 +1023,7 @@ export default function DirectBookingPage() {
             </div>
 
             {/* RIGHT: PATIENT DETAILS (2x2 FORM GRID) */}
-            <div className="lg:col-span-6 space-y-3.5">
+            <div className="w-full min-w-0 lg:col-span-6 space-y-3.5">
               <div className="flex items-center gap-2.5">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
                   <Info className="h-4 w-4" />
@@ -965,7 +1039,7 @@ export default function DirectBookingPage() {
                   <label className="label text-[11px] font-semibold mb-1">Full Name *</label>
                   <input
                     type="text"
-                    className="input text-xs sm:text-sm !py-2 !rounded-xl"
+                    className="input text-xs sm:text-sm !py-2 !rounded-xl bg-white dark:bg-surface/80 border-slate-200 dark:border-line/60"
                     placeholder="Enter your full name"
                     value={fullName}
                     onChange={(e) => {
@@ -980,7 +1054,7 @@ export default function DirectBookingPage() {
                   <label className="label text-[11px] font-semibold mb-1">Phone Number *</label>
                   <input
                     type="tel"
-                    className="input text-xs sm:text-sm !py-2 !rounded-xl"
+                    className="input text-xs sm:text-sm !py-2 !rounded-xl bg-white dark:bg-surface/80 border-slate-200 dark:border-line/60"
                     placeholder="+92 300 1234567"
                     value={phone}
                     onChange={(e) => {
@@ -995,7 +1069,7 @@ export default function DirectBookingPage() {
                   <label className="label text-[11px] font-semibold mb-1">Email Address (Optional)</label>
                   <input
                     type="email"
-                    className="input text-xs sm:text-sm !py-2 !rounded-xl"
+                    className="input text-xs sm:text-sm !py-2 !rounded-xl bg-white dark:bg-surface/80 border-slate-200 dark:border-line/60"
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -1005,7 +1079,7 @@ export default function DirectBookingPage() {
                 <div>
                   <label className="label text-[11px] font-semibold mb-1">Reason for Visit *</label>
                   <select
-                    className="input text-xs sm:text-sm !py-2 !rounded-xl"
+                    className="input text-xs sm:text-sm !py-2 !rounded-xl bg-white dark:bg-surface/80 border-slate-200 dark:border-line/60"
                     value={reason}
                     onChange={(e) => {
                       setReason(e.target.value);
@@ -1026,14 +1100,14 @@ export default function DirectBookingPage() {
           {/* ======================================================= */}
           {/* DIVIDER BETWEEN ROW 2 AND ROW 3                         */}
           {/* ======================================================= */}
-          <div className="w-full border-t border-line/40 my-6 sm:my-8" />
+          <div className="w-full border-t border-slate-200/90 dark:border-line/40 my-6 sm:my-8" />
 
           {/* ======================================================= */}
           {/* ROW 3: APPOINTMENT SUMMARY (LEFT) & PAYMENT (RIGHT)     */}
           {/* ======================================================= */}
-          <div className="w-full grid gap-5 lg:gap-6 lg:grid-cols-12 items-stretch">
+          <div className="w-full min-w-0 grid gap-5 lg:gap-6 grid-cols-1 lg:grid-cols-12 items-stretch">
             {/* LEFT: APPOINTMENT SUMMARY (MATCHING REFERENCE EXACTLY) */}
-            <div className="lg:col-span-6 space-y-3">
+            <div className="w-full min-w-0 lg:col-span-6 space-y-3">
               <div className="flex items-center gap-2.5">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
                   <FileText className="h-4 w-4" />
@@ -1044,8 +1118,8 @@ export default function DirectBookingPage() {
               </div>
 
               {selectedDoctor && (
-                <div className="rounded-2xl border border-line/60 bg-surface-2/40 p-3.5 sm:p-4 flex flex-col justify-center h-[calc(100%-2.75rem)]">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="rounded-2xl border border-slate-200/90 dark:border-line/60 bg-white dark:bg-surface-2/40 p-3.5 sm:p-4 flex flex-col justify-center h-[calc(100%-2.75rem)] shadow-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
                     {/* Doctor Info */}
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="h-12 w-12 rounded-xl overflow-hidden bg-surface shrink-0 border border-line/60">
@@ -1054,10 +1128,10 @@ export default function DirectBookingPage() {
                       <div className="min-w-0">
                         <p className="font-display font-bold text-sm text-fg truncate">{selectedDoctor.name}</p>
                         <p className="text-xs text-primary flex items-center gap-1 font-medium truncate">
-                          <HeartPulse className="h-3 w-3 shrink-0" /> {selectedDoctor.specialization}
+                          <Stethoscope className="h-3.5 w-3.5 shrink-0 text-primary" /> {selectedDoctor.specialization}
                         </p>
                         <p className="text-[10px] text-muted flex items-center gap-1 mt-0.5">
-                          <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />
+                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400 shrink-0" />
                           <span className="font-semibold text-fg">{selectedDoctor.rating.toFixed(1)}</span>
                           <span>({(selectedDoctor.reviews?.length || 0) * 40 + 80}+ reviews)</span>
                         </p>
@@ -1071,7 +1145,7 @@ export default function DirectBookingPage() {
                       </span>
                       <div>
                         <p className="text-[9px] text-muted uppercase font-bold tracking-wider">Date</p>
-                        <p className="text-xs font-bold text-fg whitespace-nowrap">{selectedDate ? fmtDate(selectedDate) : "Nov 20, 2026"}</p>
+                        <p className="text-xs font-bold text-fg whitespace-nowrap">{selectedDate ? fmtDate(selectedDate) : "Select date"}</p>
                       </div>
                     </div>
 
@@ -1082,7 +1156,7 @@ export default function DirectBookingPage() {
                       </span>
                       <div>
                         <p className="text-[9px] text-muted uppercase font-bold tracking-wider">Time</p>
-                        <p className="text-xs font-bold text-fg whitespace-nowrap">{selectedTime ? fmtTime(selectedTime) : "09:00 AM"}</p>
+                        <p className="text-xs font-bold text-fg whitespace-nowrap">{selectedTime ? fmtTime(selectedTime) : "Select time"}</p>
                       </div>
                     </div>
                   </div>
@@ -1090,8 +1164,8 @@ export default function DirectBookingPage() {
               )}
             </div>
 
-            {/* RIGHT: PAYMENT (MATCHING REFERENCE + DASHBOARD INTEGRATION) */}
-            <div className="lg:col-span-6 space-y-3">
+{/* RIGHT: PAYMENT (MATCHING REFERENCE + DASHBOARD INTEGRATION) */}
+            <div className="w-full min-w-0 lg:col-span-6 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
@@ -1102,11 +1176,11 @@ export default function DirectBookingPage() {
                   </div>
                 </div>
                 <span className="badge border-primary/30 bg-primary/10 text-primary text-[10px] font-semibold">
-                  DEMO / SIMULATED PAYMENT
+                  DEMO | SIMULATED PAYMENT
                 </span>
               </div>
 
-              <div className="rounded-2xl border border-line/60 bg-surface-2/40 p-3.5 sm:p-4 flex flex-col justify-between h-[calc(100%-2.75rem)] space-y-3">
+              <div className="rounded-2xl border border-slate-200/90 dark:border-line/60 bg-white dark:bg-surface-2/40 p-3.5 sm:p-4 flex flex-col justify-between h-[calc(100%-2.75rem)] space-y-3 shadow-xs">
                 <div className="space-y-1">
                   <div className="flex items-baseline justify-between">
                     <span className="text-xs text-muted">Consultation Fee</span>
@@ -1119,7 +1193,7 @@ export default function DirectBookingPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t border-line/40">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t border-slate-200/80 dark:border-line/40">
                   {/* Real Payment Brand Badges with Interactive Selection */}
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {[
@@ -1153,7 +1227,7 @@ export default function DirectBookingPage() {
                           } ${
                             isChosen
                               ? "ring-2 ring-primary border-primary scale-105"
-                              : "border-line/60 hover:border-primary/60 opacity-85 hover:opacity-100"
+                              : "border-slate-200 dark:border-line/60 hover:border-primary/60 opacity-85 hover:opacity-100"
                           }`}
                           title={m.label}
                         >
@@ -1168,7 +1242,7 @@ export default function DirectBookingPage() {
                     type="button"
                     disabled={paying}
                     onClick={handleConfirmAndPay}
-                    className="btn-primary !py-2.5 !px-5 !rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 shadow-glow shrink-0 transition-transform active:scale-95"
+                    className="btn-primary !py-2.5 !px-5 !rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 shadow-glow w-full sm:w-auto shrink-0 transition-transform active:scale-95"
                   >
                     Confirm & Pay <ChevronRight className="h-4 w-4" />
                   </button>
