@@ -5,6 +5,7 @@ import { CalendarCheck, CheckCircle2, Clock, Stethoscope, Users, XCircle, Sparkl
 import StatCard from "@/components/dashboard/StatCard";
 import ChartCard from "@/components/charts/ChartCard";
 import { useChartColors } from "@/components/charts/useChartColors";
+import AdminQueueMonitor from "@/components/queue/AdminQueueMonitor";
 import { useApp } from "@/hooks/useApp";
 import { countBy } from "@/hooks/useStats";
 import { WEEKDAYS } from "@/types";
@@ -51,6 +52,10 @@ export default function AdminDashboard() {
         <StatCard label="Completed" value={k.completed} icon={CheckCircle2} tone="ok" />
         <StatCard label="Cancelled" value={k.cancelled + k.rejected} icon={XCircle} tone="bad" />
       </div>
+
+      {/* Hospital-Wide OPD Queue & Floor Monitor */}
+      <AdminQueueMonitor />
+
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard title="Appointment trends" subtitle="Line chart - weekly totals">
           <LineChart data={charts.trend}>{axis}<XAxis dataKey="name" stroke={c.axis} tickLine={false} fontSize={11} interval={1} /><YAxis stroke={c.axis} tickLine={false} width={32} /><Tooltip contentStyle={tt} />

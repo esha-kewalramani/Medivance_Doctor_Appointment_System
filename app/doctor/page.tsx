@@ -8,6 +8,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import ChartCard from "@/components/charts/ChartCard";
 import { useChartColors } from "@/components/charts/useChartColors";
 import StatusBadge from "@/components/ui/StatusBadge";
+import DoctorQueueController from "@/components/queue/DoctorQueueController";
 import { useApp } from "@/hooks/useApp";
 import { countBy } from "@/hooks/useStats";
 import { WEEKDAYS } from "@/types";
@@ -19,7 +20,7 @@ export default function DoctorDashboard() {
   const mine = useMemo(() => data.appointments.filter((a) => a.doctorId === session?.userId), [data.appointments, session]);
   const k = countBy(mine);
   const today = todayISO();
-  const todays = mine.filter((a) => a.date === today && ["pending", "approved"].includes(a.status)).sort((a, b) => (a.time > b.time ? 1 : -1));
+  const todays = mine.filter((a) => a.date === today && ["pending", "approved", "completed"].includes(a.status)).sort((a, b) => (a.time > b.time ? 1 : -1));
   const byDay = WEEKDAYS.map((d) => ({ name: d, total: mine.filter((a) => weekdayOf(a.date) === d && a.status !== "cancelled" && a.status !== "rejected").length }));
   const trend = Array.from({ length: 14 }, (_, i) => { const d = addDays(today, i - 7); return { name: d.slice(5), count: mine.filter((a) => a.date === d && a.status !== "cancelled" && a.status !== "rejected").length }; });
   const busiest = [...byDay].sort((a, b) => b.total - a.total)[0];
@@ -36,6 +37,10 @@ export default function DoctorDashboard() {
         <StatCard label="Completed" value={k.completed} icon={CheckCircle2} />
         <StatCard label="Cancelled / rejected" value={k.cancelled + k.rejected} icon={Ban} tone="bad" />
       </div>
+
+      {/* Real-Time Live Queue & OPD Controller */}
+      <DoctorQueueController />
+
       <div className="grid gap-4 lg:grid-cols-3">
         <ChartCard title="Weekly appointment graph" subtitle="Appointments by weekday" className="lg:col-span-2">
           <BarChart data={byDay}><CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} /><XAxis dataKey="name" stroke={c.axis} tickLine={false} /><YAxis allowDecimals={false} stroke={c.axis} tickLine={false} width={28} />

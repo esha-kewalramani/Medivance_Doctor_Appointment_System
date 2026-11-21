@@ -29,8 +29,8 @@ export function HomeHero() {
           <img src="/images/hero-night.jpg" alt="MEDIVANCE Hospital" className="h-full w-full object-cover object-center" />
           {/* Seamless gradient at the bottom of the photo on mobile */}
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#071225] to-transparent lg:hidden" />
-          {/* Theme-aware text-side gradients (large screens only) */}
-          <div className="absolute inset-0 hidden bg-gradient-to-r from-[#071225] via-[#071225]/85 to-transparent lg:block lg:w-[58%]" />
+          {/* Deep clean gradient on the left so background monolith sign never bleeds behind text */}
+          <div className="absolute inset-0 hidden bg-gradient-to-r from-[#071225] from-45% via-[#071225]/90 via-62% to-transparent lg:block lg:w-[65%]" />
         </div>
         <div className="hero-content relative z-10 flex max-w-xl flex-col justify-center gap-4 p-6 sm:p-10 lg:h-full lg:py-6 lg:pl-12">
           <span className="on-dark"><Logo tagline size={44} /></span>

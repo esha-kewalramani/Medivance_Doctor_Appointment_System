@@ -25,48 +25,49 @@ export default function PublicNavbar() {
     { label: "Inside", href: "/inside", icon: HelpCircle, match: (p) => p.startsWith("/inside") },
     { label: "Doctors", href: "/doctors", icon: Stethoscope, match: (p) => p.startsWith("/doctors") || p.startsWith("/patient/doctors") },
     { label: "Live Location", href: "/location", icon: MapPin, match: (p) => p.startsWith("/location") },
-    { label: "Aura AI", href: "/aura-ai", icon: Bot, match: (p) => p.startsWith("/aura-ai") },
     { label: "Appointments", href: role ? `/${role}/appointments` : "/login/patient?next=/patient/appointments", icon: CalendarCheck, match: (p) => /^\/(patient|doctor|admin)\/appointments/.test(p) || (!role && p.startsWith("/login/")) },
     { label: "Workspace", href: "/workspace", icon: LayoutGrid, match: (p) => p.startsWith("/workspace") || p === "/login" },
   ];
 
   return (
-    <header className="sticky top-0 z-50 px-3 pt-3 sm:px-6">
-      <div className="nav-shell mx-auto flex max-w-[1400px] items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-        <Logo stacked size={34} />
+    <header className="sticky top-0 z-50 px-2 pt-2 sm:px-6 sm:pt-3">
+      <div className="nav-shell mx-auto flex max-w-[1400px] items-center justify-between gap-2 px-3 py-2 sm:gap-3 sm:px-5">
+        <div className="shrink-0">
+          <Logo stacked size={32} />
+        </div>
 
-        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main">
+        <nav className="hidden items-center gap-0.5 xl:gap-1 lg:flex" aria-label="Main">
           {links.map((l) => {
             const on = l.match(path);
             return (
               <Link
                 key={l.label}
                 href={l.href}
-                className={`nav-link ${on ? "active" : ""}`}
+                className={`nav-link text-xs xl:text-sm px-2 py-1.5 xl:px-2.5 xl:py-1.5 ${on ? "active" : ""}`}
                 aria-current={on ? "page" : undefined}
               >
-                <l.icon className="h-4 w-4" />
-                {l.label}
+                <l.icon className="h-3.5 w-3.5 xl:h-4 xl:w-4 shrink-0" />
+                <span className="whitespace-nowrap">{l.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <ThemeToggle />
           {session ? (
-            <button onClick={logout} className="nav-login hidden sm:inline-flex">Logout</button>
+            <button onClick={logout} className="nav-login !hidden sm:!inline-flex">Logout</button>
           ) : (
-            <Link href="/workspace" className="nav-login hidden sm:inline-flex">Login</Link>
+            <Link href="/workspace" className="nav-login !hidden sm:!inline-flex">Login</Link>
           )}
           <Link
             href={session?.role === "patient" ? "/patient/book" : "/book"}
-            className="nav-cta hidden sm:inline-flex"
+            className="nav-cta !hidden sm:!inline-flex"
           >
-            Book now <ArrowUpRight className="h-4 w-4" />
+            <span className="whitespace-nowrap">Book now</span> <ArrowUpRight className="h-3.5 w-3.5 xl:h-4 xl:w-4" />
           </Link>
           <button
-            className="btn-ghost btn-sm lg:hidden"
+            className="btn-ghost h-8 w-8 sm:h-9 sm:w-9 p-0 flex items-center justify-center rounded-xl shrink-0 lg:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Menu"
             aria-expanded={open}
@@ -78,25 +79,27 @@ export default function PublicNavbar() {
 
       {open && (
         <div className="nav-shell mx-auto mt-2 max-w-[1400px] animate-pop p-3 lg:hidden">
-          {links.map((l) => (
-            <Link
-              key={l.label}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className={`nav-link !px-3 !py-3 ${l.match(path) ? "active" : ""}`}
-            >
-              <l.icon className="h-4 w-4" />
-              {l.label}
-            </Link>
-          ))}
-          <div className="mt-2 grid grid-cols-2 gap-2 border-t border-line/40 pt-3">
+          <div className="flex flex-col gap-1">
+            {links.map((l) => (
+              <Link
+                key={l.label}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className={`nav-link !flex w-full items-center gap-3 !px-3 !py-2.5 rounded-xl ${l.match(path) ? "active" : ""}`}
+              >
+                <l.icon className="h-4 w-4 shrink-0" />
+                <span className="text-sm font-medium">{l.label}</span>
+              </Link>
+            ))}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 border-t border-line/40 pt-3">
             {session ? (
               <button
                 onClick={() => {
                   logout();
                   setOpen(false);
                 }}
-                className="nav-login"
+                className="nav-login w-full justify-center !flex"
               >
                 Logout
               </button>
@@ -104,7 +107,7 @@ export default function PublicNavbar() {
               <Link
                 href="/workspace"
                 onClick={() => setOpen(false)}
-                className="nav-login"
+                className="nav-login w-full justify-center !flex"
               >
                 Login
               </Link>
@@ -112,9 +115,9 @@ export default function PublicNavbar() {
             <Link
               href={session?.role === "patient" ? "/patient/book" : "/book"}
               onClick={() => setOpen(false)}
-              className="nav-cta"
+              className="nav-cta w-full justify-center !flex"
             >
-              Book now <ArrowUpRight className="h-4 w-4" />
+              <span>Book now</span> <ArrowUpRight className="h-4 w-4 shrink-0" />
             </Link>
           </div>
         </div>

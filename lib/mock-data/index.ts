@@ -17,7 +17,7 @@ export const SPECIALIZATIONS: Specialization[] = [
 
 const win = (id: string, days: Weekday[], start: string, end: string) =>
   days.map((d, i) => ({ id: `${id}_${i}`, day: d, start, end }));
-const wk: Weekday[] = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const wk: Weekday[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const D = (
   n: number, name: string, spec: string, qual: string, exp: number, rating: number, fee: number,
@@ -33,7 +33,7 @@ const D = (
 });
 
 export const DOCTORS: Doctor[] = [
-  D(1, "Dr. Ayesha Khan", "Cardiology", "MBBS, FCPS (Cardiology)", 14, 4.9, 3000, ["English", "Urdu", "Sindhi"], "Consultant cardiologist focused on preventive cardiology, hypertension and heart failure management. Believes in clear explanations and long-term lifestyle plans.", win("w1", wk, "09:00", "13:00")),
+  D(1, "Dr. Ayesha Khan", "Cardiology", "MBBS, FCPS (Cardiology)", 14, 4.9, 3000, ["English", "Urdu", "Sindhi"], "Consultant cardiologist focused on preventive cardiology, hypertension and heart failure management. Believes in clear explanations and long-term lifestyle plans.", win("w1", wk, "09:00", "17:00")),
   D(2, "Dr. Hassan Raza", "General Medicine", "MBBS, MRCP", 15, 4.8, 2000, ["English", "Urdu", "Punjabi"], "Experienced general physician providing primary care, chronic condition checkups, and routine wellness screenings.", [...win("w2a", ["Mon", "Wed", "Fri"], "10:00", "14:00"), ...win("w2b", ["Sat"], "10:00", "12:00")]),
   D(3, "Dr. Sara Ahmed", "Dermatology", "MBBS, MCPS (Dermatology)", 12, 4.7, 2800, ["English", "Urdu"], "Skin specialist for acne, eczema, pigmentation, hair loss and cosmetic dermatology.", win("w3", ["Tue", "Wed", "Thu", "Sat"], "14:00", "18:00")),
   D(4, "Dr. Kamran Siddiqui", "Orthopedics", "MBBS, FRCS (Orthopedics)", 18, 4.9, 4000, ["English", "Urdu"], "Joint replacement and sports injury surgeon with nearly two decades of experience.", win("w4", wk, "11:00", "15:00")),
@@ -111,15 +111,22 @@ function seedAppointments(doctors: Doctor[]): Appointment[] {
   // make sure the demo patient and demo doctor always have a few records
   const d1 = doctors[0];
   const extra: [number, AppointmentStatus, string, string][] = [
-    [-9, "completed", "09:00", "p1"], [-3, "cancelled", "09:30", "p1"], [2, "approved", "10:00", "p1"], [4, "pending", "11:00", "p1"], [5, "pending", "09:30", "p3"], [1, "pending", "12:00", "p4"],
+    [0, "approved", "14:15", "p1"],
+    [0, "approved", "14:45", "p2"],
+    [-9, "completed", "09:00", "p1"],
+    [-3, "cancelled", "09:30", "p1"],
+    [2, "approved", "10:00", "p1"],
+    [4, "pending", "11:00", "p1"],
+    [5, "pending", "09:30", "p3"],
+    [1, "pending", "12:00", "p4"],
   ];
   extra.forEach(([off, status, time, pid], i) => {
     let date = addDays(today, off);
-    // keep the demo doctor's records on working days (Mon-Fri)
-    while ([0, 6].includes(new Date(date + "T00:00:00").getDay())) date = addDays(date, off < 0 ? -1 : 1);
+    // keep the demo doctor's records on working days (Mon-Sat)
+    while ([0].includes(new Date(date + "T00:00:00").getDay())) date = addDays(date, off < 0 ? -1 : 1);
     const t = time;
     if (out.some((a) => a.doctorId === d1.id && a.date === date && a.time === t && a.status !== "cancelled" && a.status !== "rejected")) return;
-    out.push({ id: `ax${i}`, ref: `MDV-${2000 + i}`, patientId: pid, doctorId: d1.id, date, time: t, reason: REASONS[i], status, createdAt: addDays(date, -3) + "T08:00:00.000Z" });
+    out.push({ id: `ax${i}`, ref: `MDV-${2000 + i}`, patientId: pid, doctorId: d1.id, date, time: t, reason: REASONS[i % REASONS.length], status, createdAt: addDays(date, -3) + "T08:00:00.000Z" });
   });
   return out;
 }
@@ -127,6 +134,7 @@ function seedAppointments(doctors: Doctor[]): Appointment[] {
 export const PRESCRIPTIONS: Prescription[] = [
   {
     id: "pr1",
+    rxNumber: "RX-2026-8812",
     patientId: "p1",
     doctorId: "d1",
     doctorName: "Dr. Ayesha Khan",
@@ -142,6 +150,7 @@ export const PRESCRIPTIONS: Prescription[] = [
   },
   {
     id: "pr2",
+    rxNumber: "RX-2026-6140",
     patientId: "p1",
     doctorId: "d2",
     doctorName: "Dr. Hassan Raza",
@@ -155,6 +164,7 @@ export const PRESCRIPTIONS: Prescription[] = [
   },
   {
     id: "pr3",
+    rxNumber: "RX-2026-4029",
     patientId: "p2",
     doctorId: "d3",
     doctorName: "Dr. Sara Ahmed",

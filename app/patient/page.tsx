@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Tooltip, XAxis, YAxis, Legend } from "recharts";
-import { Bot, CalendarCheck, CalendarClock, CalendarX2, CheckCircle2, Mail, Phone, Droplets, Pill, FileText, ShieldCheck, ShieldAlert, Sparkles } from "lucide-react";
+import { Bot, CalendarCheck, CalendarClock, CalendarX2, CheckCircle2, Mail, Phone, Droplets, Pill, FileText, ShieldCheck, ShieldAlert, Sparkles, Printer } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import HealthSummary from "@/components/dashboard/HealthSummary";
 import Countdown from "@/components/appointments/Countdown";
@@ -11,6 +11,11 @@ import { useChartColors } from "@/components/charts/useChartColors";
 import Avatar from "@/components/ui/Avatar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import EmptyState from "@/components/ui/EmptyState";
+import PatientLiveQueueCard from "@/components/queue/PatientLiveQueueCard";
+import HospitalArrivalCheckIn from "@/components/queue/HospitalArrivalCheckIn";
+import AutomatedRemindersCard from "@/components/notifications/AutomatedRemindersCard";
+import PrescriptionViewModal from "@/components/prescriptions/PrescriptionViewModal";
+import { Prescription } from "@/types";
 import { useApp } from "@/hooks/useApp";
 import { addDays, fmtDate, fmtTime, parseISO, timeAgo, todayISO } from "@/lib/utilities";
 
@@ -21,6 +26,7 @@ export default function PatientDashboard() {
   const mine = useMemo(() => data.appointments.filter((a) => a.patientId === session?.userId), [data.appointments, session]);
   const myPrescriptions = useMemo(() => (data.prescriptions || []).filter((p) => p.patientId === session?.userId), [data.prescriptions, session]);
   const myRecords = useMemo(() => (data.medicalRecords || []).filter((m) => m.patientId === session?.userId), [data.medicalRecords, session]);
+  const [selectedRx, setSelectedRx] = useState<Prescription | null>(null);
 
   const today = todayISO();
   const upcoming = mine.filter((a) => ["pending", "approved"].includes(a.status) && a.date >= today).sort((a, b) => (a.date + a.time > b.date + b.time ? 1 : -1));
@@ -53,6 +59,15 @@ export default function PatientDashboard() {
           <div className="flex flex-wrap gap-2"><Link href="/patient/book" className="btn-primary">Book appointment</Link><Link href="/patient/assistant" className="btn-ghost"><Bot className="h-4 w-4" /> Ask AI</Link></div>
         </div>
       </section>
+
+      {/* 1-Click Fast-Track GPS Reception Check-In */}
+      <HospitalArrivalCheckIn />
+
+      {/* Real-Time Live Queue & Token Tracker */}
+      <PatientLiveQueueCard />
+
+      {/* Automated SMS & Email Reminders Notification Monitor */}
+      <AutomatedRemindersCard />
 
       {/* Aura AI Consent & Privacy Card */}
       <section className="card border-primary/20 bg-surface-2/40 p-4 sm:p-5">
@@ -127,7 +142,20 @@ export default function PatientDashboard() {
                       </li>
                     ))}
                   </ul>
-                  {p.instructions && <p className="text-xs text-muted pt-1"><b className="text-fg">Advice:</b> {p.instructions}</p>}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-line/40">
+                    {p.instructions ? (
+                      <p className="text-xs text-muted truncate max-w-[200px] sm:max-w-[260px]">
+                        <b className="text-fg">Advice:</b> {p.instructions}
+                      </p>
+                    ) : <span />}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedRx(p)}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-teal-600 dark:hover:text-cyan-300 transition-colors px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20"
+                    >
+                      <Printer className="h-3.5 w-3.5" /> Official Slip & QR
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -203,6 +231,16 @@ export default function PatientDashboard() {
             ))}</ul>)}
         </section>
       </div>
+
+      {/* Official Prescription View & QR Verification Slip Modal */}
+      {selectedRx && (
+        <PrescriptionViewModal
+          open={Boolean(selectedRx)}
+          prescription={selectedRx}
+          patientName={user?.name || "Patient"}
+          onClose={() => setSelectedRx(null)}
+        />
+      )}
     </div>
   );
 }

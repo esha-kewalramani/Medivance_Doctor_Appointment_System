@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Search, FileText, Pill, Plus, HeartPulse, Activity, User, ShieldCheck } from "lucide-react";
+import { Search, FileText, Pill, Plus, ShieldCheck } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import Avatar from "@/components/ui/Avatar";
 import Modal from "@/components/ui/Modal";

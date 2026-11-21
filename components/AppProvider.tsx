@@ -4,11 +4,10 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { Appointment, AppointmentStatus, AvailabilityWindow, DataState, Doctor, MedicalRecord, Notification, Patient, Payment, Prescription, Reschedule, Role, Session, Settings, Specialization, Weekday } from "@/types";
 import { createSeed } from "@/lib/mock-data";
 import { KEYS, readJSON, removeKey, writeJSON } from "@/lib/storage";
-import { authenticate } from "@/lib/authentication";
 import { genRef, genTransactionId, makeSlots, todayISO, toMin, uid, weekdayOf, fmtDate, fmtTime } from "@/lib/utilities";
 import { toast } from "@/components/notifications/alerts";
 import { getSupabase, siteUrl } from "@/lib/supabase/client";
-import { emptyData, fetchSession, loadAll, pushDiff } from "@/lib/supabase/sync";
+import { fetchSession, loadAll, pushDiff } from "@/lib/supabase/sync";
 
 // Backend mode: when NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY are set, everything is stored in Supabase. Otherwise the demo (LocalStorage) mode is used.
 const sb = getSupabase();
@@ -157,6 +156,26 @@ export default function AppProvider({ children }: { children: ReactNode }) {
       saved.applications = saved.applications ?? [];
       saved.prescriptions = saved.prescriptions ?? seed.prescriptions;
       saved.medicalRecords = saved.medicalRecords ?? seed.medicalRecords;
+
+      // Ensure patient p1 (Esha) has today's live booked appointment with Dr. Ayesha Khan
+      const today = todayISO();
+      const hasLiveToday = saved.appointments.some(
+        (a) => a.patientId === "p1" && a.date === today && a.status === "approved"
+      );
+      if (!hasLiveToday) {
+        saved.appointments.unshift({
+          id: `appt-real-1415`,
+          ref: `MDV-2026-LIVE`,
+          patientId: "p1",
+          doctorId: "d1",
+          date: today,
+          time: "14:15",
+          reason: "Cardiovascular health evaluation & routine blood pressure checkup",
+          status: "approved",
+          createdAt: new Date().toISOString(),
+        });
+        writeJSON(KEYS.data, saved);
+      }
 
       dataRef.current = saved;
       setData(saved);

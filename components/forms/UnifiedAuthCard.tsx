@@ -6,7 +6,6 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  KeyRound,
   Lock,
   LogIn,
   Mail,

@@ -11,13 +11,14 @@
     "seed:supabase": "node --env-file=.env.local scripts/seed-supabase.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
     "lucide-react": "^0.454.0",
     "next": "14.2.15",
+    "pptxgenjs": "^4.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.13.0",
-    "sweetalert2": "^11.14.4",
-    "@supabase/supabase-js": "^2.45.4"
+    "sweetalert2": "^11.14.4"
   },
   "devDependencies": {
     "@types/node": "^20.16.0",

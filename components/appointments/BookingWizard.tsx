@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, CreditCard, Lock, Receipt, Search, UserCheck, UserPlus, Info } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, CreditCard, Lock, Receipt, Search, Smartphone, UserCheck, UserPlus } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import { useApp } from "@/hooks/useApp";
 import { useQueryParam } from "@/hooks/useQueryParam";
@@ -9,6 +9,7 @@ import { addDays, fmtDate, fmtTime, money, todayISO, weekdayOf } from "@/lib/uti
 import { toast } from "@/components/notifications/alerts";
 import ReceiptModal from "@/components/appointments/ReceiptModal";
 import { Appointment, Payment } from "@/types";
+import { scheduleAppointmentReminders } from "@/lib/notificationService";
 
 const STEPS = ["Doctor", "Date & time", "Details & Reason", "Review", "Payment"];
 const PAY_PHASES = ["Contacting the demo payment service...", "Verifying the simulated payment...", "Confirming your appointment..."];
@@ -108,6 +109,20 @@ export default function BookingWizard() {
       return;
     }
     toast("success", "Booking confirmed", `Reference ${res.appointment.ref}`);
+    const clientPhone = res.appointment.guestDetails?.phone || patient?.phone || "+92 300 1234567";
+    const clientEmail = res.appointment.guestDetails?.email || patient?.email || "patient@medivance.pk";
+    const clientName = res.appointment.guestDetails?.name || patient?.name || "Patient";
+
+    scheduleAppointmentReminders({
+      appointmentId: res.appointment.id,
+      patientName: clientName,
+      phone: clientPhone,
+      email: clientEmail,
+      doctorName: doctor.name,
+      appointmentDate: res.appointment.date,
+      appointmentTime: res.appointment.time,
+    });
+
     setDone({ appointment: res.appointment, payment: res.payment });
   };
 
@@ -150,6 +165,28 @@ export default function BookingWizard() {
             <div className="col-span-2"><dt className="label">Transaction ID</dt><dd className="break-all font-semibold">{pay.transactionId}</dd></div>
           </dl>
           <p className="mt-3 text-[11px] text-muted">Simulated payment for demonstration. No real money was deducted.</p>
+        </div>
+
+        {/* Automated SMS & Email Reminders Status Block */}
+        <div className="mt-4 rounded-xl border border-emerald-400/50 bg-emerald-500/10 p-4 text-left text-xs">
+          <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300">
+            <Smartphone className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Automated Patient Reminders Scheduled:</span>
+          </div>
+          <ul className="mt-2.5 space-y-1.5 text-slate-700 dark:text-slate-300 text-[11.5px]">
+            <li className="flex items-center gap-2">
+              <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+              <span>Instant Confirmation SMS & Email dispatched to <strong>{clientPhone || clientEmail}</strong></span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 text-teal-600 dark:text-cyan-400 shrink-0" />
+              <span>Automated <strong>24-Hour Before Reminder</strong> scheduled</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              <span>Automated <strong>1-Hour Before Urgent Alert</strong> scheduled</span>
+            </li>
+          </ul>
         </div>
 
         {ap.isGuest && (

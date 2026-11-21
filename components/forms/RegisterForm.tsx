@@ -28,6 +28,119 @@ import { toast } from "@/components/notifications/alerts";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 
+const BENEFITS = [
+  {
+    title: "Secure & Private",
+    desc: "256-bit encrypted health records & confidentiality.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Trusted Doctors",
+    desc: "Certified medical specialists and verified credentials.",
+    icon: UserCheck,
+  },
+  {
+    title: "Easy Booking",
+    desc: "Instant doctor scheduling without waiting queues.",
+    icon: Zap,
+  },
+  {
+    title: "24/7 Support",
+    desc: "Continuous patient assistance and emergency care.",
+    icon: Headphones,
+  },
+];
+
+function DoctorVisual({ className = "" }: { className?: string }) {
+  return (
+    <div className={`flex flex-col items-center ${className}`}>
+      {/* Doctor Portrait Container with Dual-Theme Border and Shadow */}
+      <div className="relative w-full max-w-[220px] sm:max-w-[260px] xl:max-w-[280px] rounded-3xl overflow-hidden border-2 border-slate-200/90 shadow-xl bg-gradient-to-b from-sky-100/90 to-slate-100/80 dark:border-cyan-500/40 dark:shadow-[0_0_35px_rgba(6,182,212,0.3)] dark:bg-gradient-to-b dark:from-[#0b1c40] dark:to-[#070f24]">
+        {/* Shield Watermark Icon */}
+        <div className="absolute top-3 right-3 z-10 grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-xl bg-white/85 border border-slate-200 text-cyan-700 backdrop-blur-md shadow-sm dark:bg-cyan-500/20 dark:border-cyan-400/40 dark:text-cyan-300">
+          <ShieldCheck className="h-4 w-4" />
+        </div>
+
+        {/* Doctor Portrait */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/registration-doctor.jpg"
+          alt="Doctor with Stethoscope"
+          className="w-full h-auto object-cover object-top hover:scale-105 transition-transform duration-500"
+        />
+
+        {/* Gradient Blend at bottom of image */}
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-100 via-slate-100/60 to-transparent dark:from-[#070f24] dark:via-[#070f24]/60 dark:to-transparent" />
+      </div>
+
+      {/* Floating "Your Health Our Priority" Pill Badge */}
+      <div className="mt-3.5 sm:mt-5 w-full max-w-[220px] sm:max-w-[260px] xl:max-w-[280px] p-2.5 sm:p-3 rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl shadow-lg shadow-slate-200/50 flex items-center gap-3 dark:border-cyan-500/40 dark:bg-slate-900/90 dark:shadow-[0_0_25px_rgba(6,182,212,0.25)]">
+        <span className="grid h-9 w-9 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-xl bg-teal-50 border border-teal-200 text-teal-700 shadow-xs dark:bg-cyan-500/20 dark:border-cyan-400/40 dark:text-cyan-400 dark:shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+          <HeartPulse className="h-4 w-4 sm:h-5 sm:w-5" />
+        </span>
+        <div>
+          <h4 className="font-display text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white tracking-wide">
+            Your Health
+          </h4>
+          <p className="text-[11px] sm:text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-700 to-cyan-600 dark:from-cyan-400 dark:to-sky-300">
+            Our Priority
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BenefitsContent({ isGrid = false }: { isGrid?: boolean }) {
+  return (
+    <>
+      <div>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-cyan-100/80 border border-cyan-300 text-cyan-800 dark:bg-cyan-500/10 dark:border-cyan-500/30 dark:text-cyan-400">
+          <Activity className="h-3.5 w-3.5 animate-pulse text-cyan-600 dark:text-cyan-400" /> Patient Portal
+        </span>
+        <h2 className="mt-2.5 font-display text-xl sm:text-2xl xl:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Why Join <br className={isGrid ? "hidden md:inline" : ""} />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-700 via-cyan-600 to-blue-700 dark:from-cyan-400 dark:via-sky-300 dark:to-blue-400">
+            MEDIVANCE?
+          </span>
+        </h2>
+      </div>
+
+      {/* Feature Items */}
+      <div className={isGrid ? "grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3.5" : "space-y-4 xl:space-y-5 mt-4"}>
+        {BENEFITS.map((item, idx) => (
+          <div
+            key={idx}
+            className="flex items-center gap-3 p-2.5 sm:p-3 rounded-2xl border border-slate-200/90 bg-white/85 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-cyan-500/50 hover:bg-white hover:shadow-md dark:border-cyan-500/20 dark:bg-slate-900/60 dark:hover:border-cyan-400/50 dark:hover:bg-slate-900/90 group"
+          >
+            <span className="grid h-10 w-10 sm:h-11 sm:w-11 shrink-0 place-items-center rounded-xl bg-cyan-100/70 border border-cyan-300/80 text-cyan-700 shadow-xs group-hover:scale-105 transition-transform dark:bg-cyan-500/15 dark:border-cyan-500/30 dark:text-cyan-400">
+              <item.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h4 className="font-display text-xs sm:text-sm font-bold text-slate-900 group-hover:text-cyan-700 transition-colors dark:text-white dark:group-hover:text-cyan-300 truncate">
+                {item.title}
+              </h4>
+              <p className="text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+                {item.desc}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tagline with Pulse Wave */}
+      <div className="pt-2 border-t border-slate-200 dark:border-cyan-500/20 mt-4">
+        <svg className="h-5 w-28 text-cyan-600/70 dark:text-cyan-400/60 mb-1" viewBox="0 0 100 25" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M0 12 h25 l4 -8 l5 16 l5 -12 l4 8 h57" />
+        </svg>
+        <p className="font-display italic text-xs text-cyan-800 dark:text-cyan-300/90 font-medium">
+          Better Care. A Healthier Tomorrow.
+        </p>
+      </div>
+    </>
+  );
+}
+
 export default function RegisterForm() {
   const router = useRouter();
   const { registerPatient, login } = useApp();
@@ -143,82 +256,35 @@ export default function RegisterForm() {
       </div>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto">
+        
+        {/* ========================================================= */}
+        {/* TABLET & MOBILE COMPANION HERO (VISIBLE ON < lg)          */}
+        {/* Ensures Doctor Visual, Benefits & Priority are visible   */}
+        {/* ========================================================= */}
+        <div className="lg:hidden mb-6 sm:mb-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-4 sm:p-6 rounded-3xl border border-slate-200/90 bg-white/80 dark:border-cyan-500/30 dark:bg-[#07132a]/80 backdrop-blur-xl shadow-lg">
+            <div className="flex-1 w-full">
+              <BenefitsContent isGrid={true} />
+            </div>
+            <div className="shrink-0 flex justify-center w-full md:w-auto">
+              <DoctorVisual />
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
           
           {/* ======================================================= */}
-          {/* LEFT COLUMN: WHY JOIN MEDIVANCE? BENEFITS               */}
+          {/* LEFT COLUMN: WHY JOIN MEDIVANCE? BENEFITS (DESKTOP)     */}
           {/* ======================================================= */}
           <div className="hidden lg:flex lg:col-span-3 flex-col justify-between space-y-6 xl:space-y-8 pr-2">
-            <div>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-cyan-100/80 border border-cyan-300 text-cyan-800 dark:bg-cyan-500/10 dark:border-cyan-500/30 dark:text-cyan-400">
-                <Activity className="h-3.5 w-3.5 animate-pulse text-cyan-600 dark:text-cyan-400" /> Patient Portal
-              </span>
-              <h2 className="mt-3 font-display text-2xl xl:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                Why Join <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-700 via-cyan-600 to-blue-700 dark:from-cyan-400 dark:via-sky-300 dark:to-blue-400">
-                  MEDIVANCE?
-                </span>
-              </h2>
-            </div>
-
-            {/* 4 Feature Items */}
-            <div className="space-y-4 xl:space-y-5">
-              {[
-                {
-                  title: "Secure & Private",
-                  desc: "256-bit encrypted health records & confidentiality.",
-                  icon: ShieldCheck,
-                },
-                {
-                  title: "Trusted Doctors",
-                  desc: "Certified medical specialists and verified credentials.",
-                  icon: UserCheck,
-                },
-                {
-                  title: "Easy Booking",
-                  desc: "Instant doctor scheduling without waiting queues.",
-                  icon: Zap,
-                },
-                {
-                  title: "24/7 Support",
-                  desc: "Continuous patient assistance and emergency care.",
-                  icon: Headphones,
-                },
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-3.5 p-3 rounded-2xl border border-slate-200/90 bg-white/85 shadow-sm backdrop-blur-md transition-all duration-300 hover:border-cyan-500/50 hover:bg-white hover:shadow-md dark:border-cyan-500/20 dark:bg-slate-900/60 dark:hover:border-cyan-400/50 dark:hover:bg-slate-900/90 dark:hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] group"
-                >
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-cyan-100/70 border border-cyan-300/80 text-cyan-700 shadow-xs group-hover:scale-105 transition-transform dark:bg-cyan-500/15 dark:border-cyan-500/30 dark:text-cyan-400 dark:shadow-[0_0_15px_rgba(6,182,212,0.25)]">
-                    <item.icon className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <h4 className="font-display text-sm font-bold text-slate-900 group-hover:text-cyan-700 transition-colors dark:text-white dark:group-hover:text-cyan-300">
-                      {item.title}
-                    </h4>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
-                      {item.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Tagline with Pulse Wave */}
-            <div className="pt-2 border-t border-slate-200 dark:border-cyan-500/20">
-              <svg className="h-6 w-32 text-cyan-600/70 dark:text-cyan-400/60 mb-2" viewBox="0 0 100 25" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M0 12 h25 l4 -8 l5 16 l5 -12 l4 8 h57" />
-              </svg>
-              <p className="font-display italic text-xs text-cyan-800 dark:text-cyan-300/90 font-medium">
-                Better Care. A Healthier Tomorrow.
-              </p>
-            </div>
+            <BenefitsContent isGrid={false} />
           </div>
 
           {/* ======================================================= */}
           {/* CENTER COLUMN: PATIENT REGISTRATION CARD                */}
           {/* ======================================================= */}
-          <div className="lg:col-span-6 w-full">
+          <div className="lg:col-span-6 w-full max-w-xl mx-auto lg:max-w-none">
             <div className="relative rounded-3xl border border-slate-200/90 bg-white/95 p-5 sm:p-7 md:p-8 backdrop-blur-2xl shadow-xl shadow-slate-200/50 transition-all dark:border-cyan-500/40 dark:bg-[#09132b]/95 dark:shadow-[0_0_45px_rgba(6,182,212,0.18)]">
               
               {/* Header */}
@@ -482,74 +548,16 @@ export default function RegisterForm() {
           </div>
 
           {/* ======================================================= */}
-          {/* RIGHT COLUMN: DOCTOR VISUAL & PRIORITY BADGE            */}
+          {/* RIGHT COLUMN: DOCTOR VISUAL & PRIORITY BADGE (DESKTOP)  */}
           {/* ======================================================= */}
           <div className="hidden lg:flex lg:col-span-3 flex-col items-center justify-between relative pl-2 min-h-[520px]">
             {/* Glowing Shield Decoration */}
             <div className="absolute top-10 right-0 z-0 h-40 w-40 rounded-full bg-cyan-400/25 blur-3xl pointer-events-none dark:bg-cyan-500/20" />
-
             <div className="relative z-10 w-full flex flex-col items-center">
-              {/* Doctor Portrait Container with Dual-Theme Border and Shadow */}
-              <div className="relative w-full max-w-[280px] rounded-3xl overflow-hidden border-2 border-slate-200/90 shadow-xl bg-gradient-to-b from-sky-100/90 to-slate-100/80 dark:border-cyan-500/40 dark:shadow-[0_0_35px_rgba(6,182,212,0.3)] dark:bg-gradient-to-b dark:from-[#0b1c40] dark:to-[#070f24]">
-                {/* Shield Watermark Icon */}
-                <div className="absolute top-3 right-3 z-10 grid h-10 w-10 place-items-center rounded-xl bg-white/85 border border-slate-200 text-cyan-700 backdrop-blur-md shadow-sm dark:bg-cyan-500/20 dark:border-cyan-400/40 dark:text-cyan-300 dark:shadow-md">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-
-                {/* Doctor Portrait */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/registration-doctor.jpg"
-                  alt="Doctor with Stethoscope"
-                  className="w-full h-auto object-cover object-top hover:scale-105 transition-transform duration-500"
-                />
-
-                {/* Gradient Blend at bottom of image */}
-                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-100 via-slate-100/60 to-transparent dark:from-[#070f24] dark:via-[#070f24]/60 dark:to-transparent" />
-              </div>
-
-              {/* Floating "Your Health Our Priority" Pill Badge */}
-              <div className="mt-5 w-full max-w-[280px] p-3 rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl shadow-lg shadow-slate-200/50 flex items-center gap-3 dark:border-cyan-500/40 dark:bg-slate-900/90 dark:shadow-[0_0_25px_rgba(6,182,212,0.25)]">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-teal-50 border border-teal-200 text-teal-700 shadow-xs dark:bg-cyan-500/20 dark:border-cyan-400/40 dark:text-cyan-400 dark:shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                  <HeartPulse className="h-5 w-5" />
-                </span>
-                <div>
-                  <h4 className="font-display text-sm font-extrabold text-slate-900 dark:text-white tracking-wide">
-                    Your Health
-                  </h4>
-                  <p className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-700 to-cyan-600 dark:from-cyan-400 dark:to-sky-300">
-                    Our Priority
-                  </p>
-                </div>
-              </div>
+              <DoctorVisual />
             </div>
-
-
-
           </div>
 
-        </div>
-
-        {/* ========================================================= */}
-        {/* MOBILE VIEW: BENEFIT PILLS ROW SHOWN BELOW CARD ON SMALL  */}
-        {/* ========================================================= */}
-        <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 lg:hidden">
-          {[
-            { title: "Secure & Private", icon: ShieldCheck },
-            { title: "Trusted Doctors", icon: UserCheck },
-            { title: "Easy Booking", icon: Zap },
-            { title: "24/7 Support", icon: Headphones },
-          ].map((item, idx) => (
-            <div
-              key={idx}
-              className="p-3 rounded-2xl border border-slate-200/90 bg-white/90 text-center flex flex-col items-center gap-1.5 shadow-xs dark:border-cyan-500/20 dark:bg-slate-900/70"
-            >
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-400">
-                <item.icon className="h-4 w-4" />
-              </span>
-              <span className="text-[11px] font-bold text-slate-800 dark:text-white">{item.title}</span>
-            </div>
-          ))}
         </div>
 
       </div>

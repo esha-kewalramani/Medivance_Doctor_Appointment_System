@@ -106,10 +106,12 @@ export interface PrescriptionItem {
 
 export interface Prescription {
   id: string;
+  rxNumber?: string;
   appointmentId?: string;
   patientId: string;
   doctorId: string;
   doctorName: string;
+  diagnosis?: string;
   date: string;
   medications: PrescriptionItem[];
   instructions?: string;
@@ -134,6 +136,70 @@ export interface MedicalRecord {
   };
   followUpDate?: string;
   createdAt: string;
+}
+
+export type QueueItemStatus = "waiting" | "calling" | "in_consultation" | "completed" | "skipped";
+
+export interface TriageBrief {
+  appointmentId: string;
+  patientId: string;
+  symptoms: string[];
+  chiefComplaint: string;
+  duration: string;
+  painScale: number; // 1-10
+  allergies: string;
+  currentMedications: string;
+  urgency: "routine" | "moderate" | "urgent";
+  soapNote: {
+    subjective: string;
+    objective: string;
+    assessment: string;
+    plan: string;
+  };
+  submittedAt: string;
+}
+
+export interface QueueToken {
+  id: string;
+  tokenNumber: number;
+  appointmentId: string;
+  patientId: string;
+  patientName: string;
+  doctorId: string;
+  doctorName: string;
+  specialization: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+  room: string;
+  status: QueueItemStatus;
+  arrivedStatus?: "en_route" | "in_lobby";
+  arrivedAt?: string;
+  calledAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  estimatedWaitMinutes: number;
+  triageBrief?: TriageBrief;
+}
+
+export type DispatchChannel = "SMS" | "EMAIL";
+export type DispatchType = "CONFIRMATION" | "REMINDER_24H" | "REMINDER_1H" | "QUEUE_SUMMON";
+
+export interface AppointmentDispatchLog {
+  id: string;
+  appointmentId: string;
+  patientName: string;
+  phone: string;
+  email: string;
+  doctorName: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  channel: DispatchChannel;
+  type: DispatchType;
+  title: string;
+  message: string;
+  scheduledFor: string;
+  sentAt?: string;
+  status: "scheduled" | "delivered";
 }
 
 export interface Specialization { id: string; name: string; description: string; icon: string }

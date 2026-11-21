@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlertTriangle,
   Calendar as CalendarIcon,
   Check,
   CheckCircle2,
@@ -11,7 +10,6 @@ import {
   Clock,
   CreditCard,
   FileText,
-  HeartPulse,
   Info,
   Lock,
   Receipt,

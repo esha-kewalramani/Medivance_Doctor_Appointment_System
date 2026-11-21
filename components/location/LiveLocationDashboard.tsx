@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   MapPin,
@@ -19,7 +19,6 @@ import {
   ArrowRight,
   ChevronRight,
   Star,
-  Clock,
   Phone,
   ShieldCheck,
   CheckCircle2,
@@ -28,7 +27,6 @@ import {
   ExternalLink,
   Car,
   Footprints,
-  CalendarDays,
   Crosshair,
 } from "lucide-react";
 import { useApp } from "@/hooks/useApp";

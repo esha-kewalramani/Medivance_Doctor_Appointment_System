@@ -136,7 +136,7 @@ export default function PortalShell({ role, children }: { role: Role; children: 
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={role === "patient" ? "Search doctors..." : "Search appointments..."} className="h-full w-full rounded-xl bg-transparent pl-9 pr-3 text-sm outline-none placeholder:text-muted" aria-label="Search" />
           </form>
-          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
             <ThemeToggle />
             <NotificationBell />
             <div ref={menuRef} className="relative">
