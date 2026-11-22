@@ -125,9 +125,9 @@ export default function AutomatedRemindersCard() {
     return () => clearInterval(timer);
   }, []);
 
-  const openPreview = (type: "CONFIRMATION" | "REMINDER_24H" | "REMINDER_1H", channel: "SMS" | "EMAIL") => {
+  const openPreview = (type: "CONFIRMATION" | "REMINDER_24H" | "REMINDER_1H" | "REMINDER_30M", channel: "SMS" | "EMAIL") => {
     setActiveTab(channel);
-    const target = logs.find((l) => l.type === type && l.channel === channel);
+    const target = logs.find((l) => (l.type === type || (type === "REMINDER_30M" && l.type === "REMINDER_1H")) && l.channel === channel);
     if (target) {
       setSelectedPreview(target);
     }
@@ -157,7 +157,7 @@ export default function AutomatedRemindersCard() {
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Auto-dispatched 24 hours & 1 hour prior to appointment to verified contact number & email
+              Auto-dispatched 24 hours &amp; 30 minutes prior to appointment to verified contact number &amp; email
             </p>
           </div>
         </div>
@@ -246,15 +246,15 @@ export default function AutomatedRemindersCard() {
           </div>
         </div>
 
-        {/* 3. 1 Hour Before Urgent Reminder */}
+        {/* 3. 30 Minutes Before Urgent Departure Alert */}
         <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-cyan-500/20 dark:bg-[#071d38]/40 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-white">
                 <Bell className="h-4 w-4 text-amber-500" />
-                3. 1h Before Urgent Alert
+                3. 30m Before Urgent Departure Alert
               </span>
-              {logs.some((l) => l.type === "REMINDER_1H" && l.status === "delivered") ? (
+              {logs.some((l) => (l.type === "REMINDER_30M" || l.type === "REMINDER_1H") && l.status === "delivered") ? (
                 <span className="text-[10px] font-bold uppercase rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 px-2 py-0.5">
                   Delivered
                 </span>
@@ -265,21 +265,21 @@ export default function AutomatedRemindersCard() {
               )}
             </div>
             <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-              Urgent departure reminder 60 minutes before visit. Instructs patient to proceed to clinic OPD room.
+              Urgent departure reminder auto-dispatched 30 minutes before visit to patient&apos;s mobile number. Tells patient to proceed to clinic OPD room.
             </p>
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-200/80 dark:border-cyan-500/20 flex items-center justify-between text-[11px]">
             <span className="text-slate-400 dark:text-slate-500">
-              {logs.some((l) => l.type === "REMINDER_1H" && l.status === "delivered")
+              {logs.some((l) => (l.type === "REMINDER_30M" || l.type === "REMINDER_1H") && l.status === "delivered")
                 ? "Auto-delivered on schedule"
-                : "Auto-sends 1h prior"}
+                : "Auto-sends 30m prior"}
             </span>
             <button
-              onClick={() => openPreview("REMINDER_1H", "SMS")}
+              onClick={() => openPreview("REMINDER_30M", "SMS")}
               className="inline-flex items-center gap-1 text-teal-700 dark:text-cyan-400 font-semibold hover:underline"
             >
-              <span>{logs.some((l) => l.type === "REMINDER_1H" && l.status === "delivered") ? "View Message" : "Preview SMS"}</span>
+              <span>{logs.some((l) => (l.type === "REMINDER_30M" || l.type === "REMINDER_1H") && l.status === "delivered") ? "View Message" : "Preview SMS"}</span>
               <ExternalLink className="h-3 w-3" />
             </button>
           </div>

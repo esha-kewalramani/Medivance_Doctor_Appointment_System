@@ -9,6 +9,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import { useApp } from "@/hooks/useApp";
 import { fmtDate, fmtTime, todayISO } from "@/lib/utilities";
 import { toast } from "@/components/notifications/alerts";
+import { Patient } from "@/types";
 
 const age = (dob: string) => Math.max(0, Math.floor((Date.now() - new Date(dob).getTime()) / 31557600000));
 
@@ -37,10 +38,29 @@ export default function DoctorPatientsPage() {
   const records = useMemo(() => {
     const mine = data.appointments.filter((a) => a.doctorId === session?.userId);
     const ids = Array.from(new Set(mine.map((a) => a.patientId)));
-    return ids.map((id) => ({
-      patient: data.patients.find((p) => p.id === id),
-      visits: mine.filter((a) => a.patientId === id).sort((a, b) => (a.date + a.time < b.date + b.time ? 1 : -1)),
-    })).filter((r) => r.patient);
+    return ids.map((id) => {
+      const pat = data.patients.find((p) => p.id === id) || (() => {
+        const a = mine.find((x) => x.patientId === id);
+        if (!a?.guestDetails?.name) return undefined;
+        const g: Patient = {
+          id,
+          name: a.guestDetails.name,
+          email: a.guestDetails.email,
+          phone: a.guestDetails.phone,
+          dob: a.guestDetails.age ? `${new Date().getFullYear() - parseInt(a.guestDetails.age)}-01-01` : "2000-01-01",
+          gender: (a.guestDetails.gender as "Male" | "Female" | "Other") || "Other",
+          registeredAt: a.createdAt,
+          isGuest: true,
+          auraConsent: false,
+          bloodGroup: undefined,
+        };
+        return g;
+      })();
+      return {
+        patient: pat,
+        visits: mine.filter((a) => a.patientId === id).sort((a, b) => (a.date + a.time < b.date + b.time ? 1 : -1)),
+      };
+    }).filter((r) => r.patient);
   }, [data, session]);
 
   const list = records.filter((r) => r.patient!.name.toLowerCase().includes(q.toLowerCase()));

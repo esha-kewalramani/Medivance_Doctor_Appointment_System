@@ -53,6 +53,29 @@ export default function BookingWizard() {
   const freeCount = (d: string) => getSlots(doctorId, d).filter((s) => s.state === "free").length;
   const doctors = data.doctors.filter((d) => (spec === "all" || d.specialization === spec) && `${d.name} ${d.specialization}`.toLowerCase().includes(q.toLowerCase()));
 
+  // Find the first upcoming date that has available free slots for the doctor
+  const firstAvailableDate = useMemo(() => {
+    if (!doctor) return todayISO();
+    for (let i = 0; i < 14; i++) {
+      const d = addDays(todayISO(), i);
+      const works = doctor.availability.some((w) => w.day === weekdayOf(d));
+      if (works && freeCount(d) > 0) {
+        return d;
+      }
+    }
+    return todayISO();
+  }, [doctor, freeCount]);
+
+  // When doctor is selected, if current date has 0 slots or today's clinic hours are concluded, auto-switch to first available date
+  useEffect(() => {
+    if (!doctorId || !doctor) return;
+    if (!date || (date === todayISO() && freeCount(todayISO()) === 0)) {
+      if (firstAvailableDate && firstAvailableDate !== date) {
+        setDate(firstAvailableDate);
+      }
+    }
+  }, [doctorId, doctor, firstAvailableDate, date, freeCount]);
+
   const patient = session ? patientById(session.userId) : undefined;
   const isGuestBooking = !session;
 
@@ -184,7 +207,7 @@ export default function BookingWizard() {
             </li>
             <li className="flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-              <span>Automated <strong>1-Hour Before Urgent Alert</strong> scheduled</span>
+              <span>Automated <strong>30-Minute Urgent Departure SMS Alert</strong> scheduled to <strong>{clientPhone}</strong></span>
             </li>
           </ul>
         </div>
@@ -318,14 +341,34 @@ export default function BookingWizard() {
             </div>
           </div>
           {date && (
-            <div className="card animate-pop p-4">
+            <div className="card animate-pop p-4 space-y-3">
+              {date === todayISO() && freeCount(todayISO()) === 0 && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-900 dark:text-amber-200">
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    Today&apos;s clinic hours have concluded for {doctor.name}.
+                  </p>
+                  <p className="mt-1 text-slate-600 dark:text-slate-300">
+                    All consultation hours for today have wrapped up or passed. Please book from upcoming dates.
+                  </p>
+                  {firstAvailableDate && firstAvailableDate !== date && (
+                    <button
+                      type="button"
+                      onClick={() => { setDate(firstAvailableDate); setTime(""); }}
+                      className="mt-2 font-bold text-teal-700 dark:text-cyan-400 hover:underline block"
+                    >
+                      &rarr; Jump to Next Available Date ({fmtDate(firstAvailableDate)})
+                    </button>
+                  )}
+                </div>
+              )}
               <h3 className="mb-1 flex items-center gap-2 font-display font-semibold"><Clock className="h-4 w-4 text-primary" /> Available times - {fmtDate(date)}</h3>
-              <p className="mb-3 text-xs text-muted">Greyed slots are already taken and cannot be booked.</p>
+              <p className="mb-3 text-xs text-muted">Greyed slots are already taken or passed and cannot be booked.</p>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
                 {slots.map((s) => (
                   <button key={s.time} disabled={s.state !== "free"} onClick={() => setTime(s.time)} aria-pressed={time === s.time}
                     className={`rounded-xl border px-2 py-2.5 text-sm font-semibold transition ${s.state !== "free" ? "cursor-not-allowed border-line/30 bg-muted/10 text-muted line-through opacity-60" : time === s.time ? "border-primary bg-primary text-primary-fg shadow-glow" : "border-line/60 hover:border-primary hover:text-primary"}`}>
-                    {fmtTime(s.time)}{s.state === "booked" && <span className="block text-[9px] font-normal no-underline">Booked</span>}
+                    {fmtTime(s.time)}{s.state === "booked" && <span className="block text-[9px] font-normal no-underline">Booked</span>}{s.state === "past" && <span className="block text-[9px] font-normal no-underline">Passed</span>}
                   </button>
                 ))}
               </div>

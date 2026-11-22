@@ -2,8 +2,8 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { QueueToken, QueueItemStatus, TriageBrief } from "@/types";
 import { useApp } from "@/hooks/useApp";
-import { todayISO } from "@/lib/utilities";
-import { announcePatientCall, playHospitalChime, sendBrowserNotification } from "@/lib/audioAlert";
+import { todayISO, toMin } from "@/lib/utilities";
+import { announcePatientCall, playHospitalChime, sendBrowserNotification, stopAnnouncement } from "@/lib/audioAlert";
 import { sendQueueSummonAlert, sendNextInLineAlert } from "@/lib/notificationService";
 
 const QUEUE_STORAGE_KEY = "medivance_live_queue_v1";
@@ -46,6 +46,8 @@ export function useLiveQueue() {
   // Initialize today's queue strictly from REAL hospital appointments
   useEffect(() => {
     const today = todayISO();
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
     const existing = loadTokens().filter((t) => !t.id.includes("-demo-") && !t.id.includes("-live-") && t.date === today);
 
     // Build real queue from today's approved/pending/completed appointments
@@ -56,30 +58,38 @@ export function useLiveQueue() {
     let tokenSeq = 10;
     const realTokens: QueueToken[] = todaysAppts.map((a) => {
       tokenSeq += 1;
+      const doc = data.doctors.find((d) => d.id === a.doctorId);
+      const pat = data.patients.find((p) => p.id === a.patientId);
+      const slotDuration = doc?.slotMinutes || 30;
+      const apptMin = toMin(a.time);
+      const isPastSlot = apptMin + slotDuration <= nowMin;
+
       const existingToken = existing.find((t) => t.appointmentId === a.id);
       if (existingToken) {
         // Keep status in sync if appointment itself was marked completed
         if (a.status === "completed" && existingToken.status !== "completed") {
           return { ...existingToken, status: "completed" };
         }
+        // If scheduled slot window elapsed while portal was closed, mark as passed so it is not auto-summoned
+        if (existingToken.status === "waiting" && isPastSlot) {
+          return { ...existingToken, status: "passed" };
+        }
         return existingToken;
       }
 
-      const doc = data.doctors.find((d) => d.id === a.doctorId);
-      const pat = data.patients.find((p) => p.id === a.patientId);
       return {
         id: `token-${a.id}`,
         tokenNumber: tokenSeq,
         appointmentId: a.id,
         patientId: a.patientId,
-        patientName: pat?.name || (a.isGuest && a.guestDetails?.name) || "Registered Patient",
+        patientName: a.guestDetails?.name || pat?.name || "Patient",
         doctorId: a.doctorId,
         doctorName: doc?.name || "Dr. Specialist",
         specialization: doc?.specialization || "General Medicine",
         date: today,
         time: a.time,
         room: `Room 102 - OPD Heart Wing`,
-        status: a.status === "completed" ? "completed" : "waiting",
+        status: a.status === "completed" ? "completed" : isPastSlot ? "passed" : "waiting",
         estimatedWaitMinutes: Math.max(5, (tokenSeq - 10) * 15),
       };
     });
@@ -105,6 +115,8 @@ export function useLiveQueue() {
       bc.onmessage = (msg) => {
         if (msg.data?.type === "QUEUE_UPDATE" && msg.data?.tokens) {
           setTokens(msg.data.tokens);
+        } else if (msg.data?.type === "STOP_ANNOUNCEMENT") {
+          stopAnnouncement(false);
         } else if (msg.data?.type === "TOKEN_CALLED") {
           const calledToken = msg.data.token as QueueToken;
           announcePatientCall(calledToken.tokenNumber, calledToken.patientName, calledToken.room);
@@ -126,14 +138,21 @@ export function useLiveQueue() {
     };
   }, [session?.userId]);
 
-  // Doctor Action: Call Next Patient in queue
-  const callNextPatient = useCallback((doctorId?: string) => {
+  // Doctor Action: Call Next Patient in queue (Strictly honors scheduled appointment times)
+  const callNextPatient = useCallback((doctorId?: string, forceAnyUpcoming = false) => {
     setTokens((prev) => {
       const today = todayISO();
-      // Find the first patient waiting for this doctor (or any doctor if omitted)
-      const targetIndex = prev.findIndex(
-        (t) => t.date === today && t.status === "waiting" && (!doctorId || t.doctorId === doctorId)
-      );
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+
+      // Find the first patient waiting for this doctor whose appointment time has arrived
+      // (If forceAnyUpcoming is false, future-scheduled patients are not summoned before their time)
+      const targetIndex = prev.findIndex((t) => {
+        if (t.date !== today || t.status !== "waiting") return false;
+        if (doctorId && t.doctorId !== doctorId) return false;
+        const apptMin = toMin(t.time);
+        return forceAnyUpcoming || apptMin <= nowMin;
+      });
 
       if (targetIndex === -1) return prev;
 
@@ -178,6 +197,8 @@ export function useLiveQueue() {
 
   // Doctor Action: Complete visit (with optional early completion notice)
   const completeConsultation = useCallback((tokenId: string, isEarly = false) => {
+    // Immediately stop any active voice/chime announcement across all tabs
+    stopAnnouncement(true);
     setTokens((prev) => {
       const today = todayISO();
       let targetDoctorId: string | undefined;

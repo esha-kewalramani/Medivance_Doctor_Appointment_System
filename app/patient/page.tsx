@@ -14,6 +14,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import PatientLiveQueueCard from "@/components/queue/PatientLiveQueueCard";
 import HospitalArrivalCheckIn from "@/components/queue/HospitalArrivalCheckIn";
 import AutomatedRemindersCard from "@/components/notifications/AutomatedRemindersCard";
+import EarlierSlotOfferCard from "@/components/notifications/EarlierSlotOfferCard";
 import PrescriptionViewModal from "@/components/prescriptions/PrescriptionViewModal";
 import { Prescription } from "@/types";
 import { useApp } from "@/hooks/useApp";
@@ -61,6 +62,9 @@ export default function PatientDashboard() {
       </section>
 
       {/* 1-Click Fast-Track GPS Reception Check-In */}
+      {/* Earlier Vacated Slot Promotion Card (Triggered when someone cancels an earlier slot) */}
+      <EarlierSlotOfferCard />
+
       <HospitalArrivalCheckIn />
 
       {/* Real-Time Live Queue & Token Tracker */}

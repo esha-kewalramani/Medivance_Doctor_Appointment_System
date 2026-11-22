@@ -56,7 +56,7 @@ export default function HospitalArrivalCheckIn() {
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-teal-500/30 bg-gradient-to-r from-teal-900/20 via-cyan-900/15 to-transparent p-4 sm:p-5 shadow-sm backdrop-blur-xl dark:border-cyan-400/30 dark:bg-[#051833]/90">
+    <div className="relative overflow-hidden rounded-2xl border border-teal-500/30 bg-gradient-to-r from-teal-50/90 via-cyan-50/60 to-white/90 p-4 sm:p-5 shadow-sm backdrop-blur-xl dark:border-cyan-400/30 dark:bg-[#051833]/90 dark:from-transparent dark:to-transparent">
       {/* Background Ambience Sheen */}
       <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-400/10 blur-2xl dark:bg-cyan-500/15" />
 
@@ -137,40 +137,41 @@ export default function HospitalArrivalCheckIn() {
           <button
             type="button"
             onClick={() => setShowQrModal(true)}
-            className="flex items-center gap-1.5 py-1.5 px-3.5 rounded-full border border-cyan-500/40 bg-cyan-950/70 hover:bg-cyan-900/90 text-cyan-200 text-xs font-semibold shadow-xs transition active:scale-[0.98]"
+            className="flex items-center gap-1.5 py-1.5 px-3.5 rounded-full border border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-teal-800 dark:border-cyan-400/40 dark:bg-cyan-950/80 dark:hover:bg-cyan-900/90 dark:text-cyan-200 text-xs font-semibold shadow-xs transition-all active:scale-[0.98]"
             title="Show Digital Gate Pass QR"
           >
-            <QrCode className="h-3.5 w-3.5 text-cyan-400" />
+            <QrCode className="h-3.5 w-3.5 text-teal-600 dark:text-cyan-400" />
             <span>Digital Gate Pass</span>
           </button>
         </div>
       </div>
 
-      {/* MODAL: Digital OPD Gate Pass (Portaled directly to document.body to avoid parent card clipping) */}
+      {/* MODAL: Digital OPD Gate Pass (Theme-aware light & dark styling) */}
       {mounted && showQrModal && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 dark:bg-black/80 p-4 backdrop-blur-md animate-fade-in"
           role="dialog"
           aria-modal="true"
           onClick={() => setShowQrModal(false)}
         >
           <div
-            className="relative w-full max-w-sm max-h-[92vh] overflow-y-auto animate-pop rounded-3xl border border-cyan-400/40 bg-[#071a33] p-6 shadow-2xl text-center flex flex-col justify-between my-auto"
+            className="relative w-full max-w-sm max-h-[92vh] overflow-y-auto animate-pop rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl text-center flex flex-col justify-between my-auto dark:border-cyan-400/40 dark:bg-[#071a33] dark:shadow-[0_0_35px_rgba(0,180,216,0.3)] text-slate-800 dark:text-slate-100 transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-cyan-500/20">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-cyan-500/20">
               <div className="text-left">
-                <h4 className="font-bold text-base text-white">
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">
                   MEDIVANCE Digital Gate Pass
                 </h4>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Scan at OPD lobby turnstile or tap to verify
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowQrModal(false)}
-                className="text-slate-400 hover:text-white text-lg font-bold p-1 rounded-lg hover:bg-slate-800"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white text-lg font-bold p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
                 ✕
               </button>
@@ -181,7 +182,7 @@ export default function HospitalArrivalCheckIn() {
               <button
                 type="button"
                 onClick={handleQrTap}
-                className="group relative flex justify-center p-4 rounded-2xl bg-white border-2 border-dashed border-cyan-400 hover:border-cyan-300 mx-auto shadow-md transition hover:scale-[1.02] cursor-pointer"
+                className="group relative flex justify-center p-4 rounded-2xl bg-white border-2 border-dashed border-teal-500/60 hover:border-teal-600 dark:border-cyan-400 dark:hover:border-cyan-300 mx-auto shadow-md transition hover:scale-[1.02] cursor-pointer"
                 title="Tap to simulate turnstile gate scan"
               >
                 <QRCodeSVG
@@ -193,39 +194,39 @@ export default function HospitalArrivalCheckIn() {
                 </span>
               </button>
 
-              <p className="mt-2 text-[11px] text-cyan-300/80 font-medium">
+              <p className="mt-2 text-[11px] text-teal-700 dark:text-cyan-300 font-medium">
                 Tap QR code above to simulate automated gate scan
               </p>
 
               {/* Scanned Feedback Banner */}
               {scannedFeedback && (
-                <div className="mt-2.5 p-2 rounded-xl bg-emerald-500/20 border border-emerald-400 text-xs font-bold text-emerald-300 animate-pop">
+                <div className="mt-2.5 p-2 rounded-xl bg-emerald-100 border border-emerald-400 text-xs font-bold text-emerald-900 dark:bg-emerald-500/20 dark:border-emerald-400 dark:text-emerald-300 animate-pop">
                   ✓ Turnstile Gate 2 Opened! Access to Elevator B Granted.
                 </div>
               )}
             </div>
 
-            {/* Pass Metadata */}
-            <div className="p-3.5 rounded-2xl bg-[#041024] text-xs text-left space-y-2 border border-cyan-500/20">
+            {/* Pass Metadata Card */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#041024] text-xs text-left space-y-2 border border-slate-200 dark:border-cyan-500/20">
               <div className="flex justify-between items-center">
-                <span className="text-slate-400">Token Number:</span>
-                <strong className="text-cyan-400 font-serif text-base">#{myToken.tokenNumber}</strong>
+                <span className="text-slate-500 dark:text-slate-400">Token Number:</span>
+                <strong className="text-teal-700 dark:text-cyan-400 font-serif text-base">#{myToken.tokenNumber}</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Patient:</span>
-                <span className="font-semibold text-slate-200">{myToken.patientName}</span>
+                <span className="text-slate-500 dark:text-slate-400">Patient:</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{myToken.patientName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Doctor:</span>
-                <span className="font-semibold text-slate-200">{myToken.doctorName}</span>
+                <span className="text-slate-500 dark:text-slate-400">Doctor:</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{myToken.doctorName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Clinic Room:</span>
-                <span className="font-semibold text-cyan-300">{myToken.room}</span>
+                <span className="text-slate-500 dark:text-slate-400">Clinic Room:</span>
+                <span className="font-semibold text-teal-700 dark:text-cyan-300">{myToken.room}</span>
               </div>
-              <div className="flex justify-between items-center pt-1 border-t border-slate-800">
-                <span className="text-slate-400">Lobby Status:</span>
-                <span className="font-bold text-emerald-400 uppercase text-[11px]">
+              <div className="flex justify-between items-center pt-1 border-t border-slate-200 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400">Lobby Status:</span>
+                <span className="font-bold text-emerald-700 dark:text-emerald-400 uppercase text-[11px]">
                   {isCheckedIn ? "🟢 Seated in Lobby" : "⚪ En Route"}
                 </span>
               </div>
@@ -234,8 +235,9 @@ export default function HospitalArrivalCheckIn() {
             {/* Footer */}
             <div className="mt-5 pt-2">
               <button
+                type="button"
                 onClick={() => setShowQrModal(false)}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 text-slate-950 font-bold text-xs hover:brightness-110 shadow-md transition"
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-bold text-xs hover:brightness-105 shadow-md transition active:scale-[0.99] dark:from-teal-500 dark:to-cyan-500 dark:text-slate-950"
               >
                 Close Pass
               </button>

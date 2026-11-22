@@ -220,7 +220,16 @@ export default function RegisterForm() {
         return;
       }
 
-      await login("patient", f.email, f.password, true);
+      if (r.confirmEmail) {
+        toast(
+          "success",
+          "Verification Email Sent!",
+          `We sent a confirmation link to ${f.email}. Please verify your email in your inbox, then sign in.`
+        );
+        router.push("/login?role=patient&email=" + encodeURIComponent(f.email));
+        return;
+      }
+
       toast("success", "Account created successfully", "Welcome to MEDIVANCE!");
       router.push("/patient");
     } catch {

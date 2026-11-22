@@ -61,12 +61,12 @@ export default function DoctorDashboard() {
         </ChartCard>
         <section className="card p-5">
           <div className="mb-3 flex items-center justify-between"><h3 className="font-display text-lg font-semibold">Today</h3><Link href="/doctor/appointments" className="text-xs font-semibold text-primary">All requests</Link></div>
-          {todays.length === 0 ? <p className="text-sm text-muted">No appointments today.</p> : <ul className="space-y-2">{todays.map((a) => <li key={a.id} className="flex items-center justify-between gap-2 text-sm"><span><span className="font-semibold">{fmtTime(a.time)}</span> - {patientById(a.patientId)?.name ?? "Patient"}</span><StatusBadge status={a.status} /></li>)}</ul>}
+          {todays.length === 0 ? <p className="text-sm text-muted">No appointments today.</p> : <ul className="space-y-2">{todays.map((a) => <li key={a.id} className="flex items-center justify-between gap-2 text-sm"><span><span className="font-semibold">{fmtTime(a.time)}</span> - {a.guestDetails?.name || patientById(a.patientId)?.name || "Patient"}</span><StatusBadge status={a.status} /></li>)}</ul>}
         </section>
       </div>
       <section className="card p-5">
         <h3 className="mb-3 font-display text-lg font-semibold">Recent activity</h3>
-        <ul className="divide-y divide-line/30">{recent.map((a) => <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm"><span><span className="font-semibold">{patientById(a.patientId)?.name ?? "Patient"}</span> <span className="text-muted">- {a.ref} - {timeAgo(a.createdAt)}</span></span><StatusBadge status={a.status} /></li>)}</ul>
+        <ul className="divide-y divide-line/30">{recent.map((a) => <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm"><span><span className="font-semibold">{a.guestDetails?.name || patientById(a.patientId)?.name || "Patient"}</span> <span className="text-muted">- {a.ref} - {timeAgo(a.createdAt)}</span></span><StatusBadge status={a.status} /></li>)}</ul>
       </section>
     </div>
   );

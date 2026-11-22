@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import { Printer, X, ShieldCheck, ArrowLeft, ExternalLink } from "lucide-react";
 import { Prescription } from "@/types";
 import QRCodeSVG from "@/components/ui/QRCodeSVG";
@@ -33,11 +34,26 @@ export default function PrescriptionViewModal({
     }
   };
 
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm p-3 sm:p-6 flex items-center justify-center print:p-0 print:bg-white">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm p-3 sm:p-6 flex items-center justify-center print:p-0 print:bg-white animate-fade-in"
+      onClick={onClose}
+    >
       
       {/* Modal / Paper Container */}
-      <div className="relative w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl text-slate-800 transition-all dark:border-cyan-500/30 dark:bg-[#07152b] dark:text-slate-100 print:border-none print:shadow-none print:p-6 print:max-w-none print:text-black">
+      <div
+        className="relative w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl text-slate-800 transition-all dark:border-cyan-500/30 dark:bg-[#07152b] dark:text-slate-100 print:border-none print:shadow-none print:p-6 print:max-w-none print:text-black my-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Actions Bar (Hidden during actual print) */}
         <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-slate-800 print:hidden">
@@ -195,9 +211,7 @@ export default function PrescriptionViewModal({
             <div className="flex items-center gap-3">
               <a
                 href={verifyPath}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Click to open online verification page"
+                title="Click to open online verification page (same window)"
                 className="group relative p-1 rounded-xl bg-white border border-slate-200 hover:border-cyan-400 dark:border-slate-700 transition"
               >
                 <QRCodeSVG value={verifyFullUrl} size={70} />
@@ -209,11 +223,9 @@ export default function PrescriptionViewModal({
                 <p>Scan with camera or click below to verify online.</p>
                 <a
                   href={verifyPath}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="font-mono text-[9px] text-teal-700 dark:text-cyan-400 hover:underline mt-0.5 inline-flex items-center gap-1 font-bold print:hidden"
                 >
-                  <span>Verify Online ↗ ({rxNum})</span>
+                  <span>Verify Online ({rxNum})</span>
                   <ExternalLink className="h-2.5 w-2.5" />
                 </a>
               </div>

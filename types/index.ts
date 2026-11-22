@@ -138,7 +138,7 @@ export interface MedicalRecord {
   createdAt: string;
 }
 
-export type QueueItemStatus = "waiting" | "calling" | "in_consultation" | "completed" | "skipped";
+export type QueueItemStatus = "waiting" | "calling" | "in_consultation" | "completed" | "skipped" | "passed";
 
 export interface TriageBrief {
   appointmentId: string;
@@ -182,7 +182,7 @@ export interface QueueToken {
 }
 
 export type DispatchChannel = "SMS" | "EMAIL";
-export type DispatchType = "CONFIRMATION" | "REMINDER_24H" | "REMINDER_1H" | "QUEUE_SUMMON";
+export type DispatchType = "CONFIRMATION" | "REMINDER_24H" | "REMINDER_1H" | "REMINDER_30M" | "QUEUE_SUMMON";
 
 export interface AppointmentDispatchLog {
   id: string;

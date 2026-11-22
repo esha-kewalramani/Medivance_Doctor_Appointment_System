@@ -271,14 +271,58 @@ export default function UnifiedAuthCard({ initialRole = "patient" }: UnifiedAuth
                     </p>
                   </div>
 
-                  {/* Form Error Banner */}
+                  {/* Form Error Banner with 1-Click Role Switch */}
                   {cardErrors.form && (
                     <div
                       role="alert"
-                      className="mb-2.5 rounded-xl border border-rose-300 bg-rose-50/90 py-1 px-2 text-[10.5px] text-rose-800 dark:border-rose-500/40 dark:bg-rose-950/40 dark:text-rose-300 flex items-start gap-1"
+                      className="mb-2.5 rounded-xl border border-rose-300 bg-rose-50/90 py-1.5 px-2.5 text-[10.5px] text-rose-800 dark:border-rose-500/40 dark:bg-rose-950/40 dark:text-rose-300 flex flex-col gap-1"
                     >
-                      <AlertCircle className="h-3 w-3 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
-                      <span>{cardErrors.form}</span>
+                      <div className="flex items-start gap-1.5">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                        <span className="leading-tight">{cardErrors.form}</span>
+                      </div>
+                      {cardErrors.form.includes("Doctor Portal") && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveRole("doctor");
+                            setEmails((prev) => ({ ...prev, doctor: emails[cfg.role] }));
+                            setPasswords((prev) => ({ ...prev, doctor: passwords[cfg.role] }));
+                          }}
+                          className="self-start text-[10px] font-bold text-teal-700 dark:text-cyan-300 underline hover:no-underline mt-0.5"
+                        >
+                          &rarr; Switch to Doctor Portal with this email
+                        </button>
+                      )}
+                      {cardErrors.form.includes("Patient Portal") && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveRole("patient");
+                            setEmails((prev) => ({ ...prev, patient: emails[cfg.role] }));
+                            setPasswords((prev) => ({ ...prev, patient: passwords[cfg.role] }));
+                          }}
+                          className="self-start text-[10px] font-bold text-teal-700 dark:text-cyan-300 underline hover:no-underline mt-0.5"
+                        >
+                          &rarr; Switch to Patient Portal with this email
+                        </button>
+                      )}
+                      {cardErrors.form.includes("Administrator Portal") && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveRole("admin");
+                            setEmails((prev) => ({ ...prev, admin: emails[cfg.role] }));
+                            setPasswords((prev) => ({ ...prev, admin: passwords[cfg.role] }));
+                          }}
+                          className="self-start text-[10px] font-bold text-teal-700 dark:text-cyan-300 underline hover:no-underline mt-0.5"
+                        >
+                          &rarr; Switch to Administrator Portal with this email
+                        </button>
+                      )}
                     </div>
                   )}
 

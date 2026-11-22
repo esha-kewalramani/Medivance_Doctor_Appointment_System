@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -14,7 +14,8 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useLiveQueue } from "@/hooks/useLiveQueue";
-import { playHospitalChime, sendBrowserNotification } from "@/lib/audioAlert";
+import { fmtTime } from "@/lib/utilities";
+import { announcePatientCall, playHospitalChime, sendBrowserNotification } from "@/lib/audioAlert";
 import PatientTriageModal from "@/components/queue/PatientTriageModal";
 
 export default function PatientLiveQueueCard() {
@@ -36,6 +37,22 @@ export default function PatientLiveQueueCard() {
     setNotifGranted(granted);
     playHospitalChime();
   };
+
+  // Immediate On-Device Audio & Notification Announcement when patient's token is called or recalled
+  const lastCallingStatusRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (myToken && myToken.status === "calling" && lastCallingStatusRef.current !== "calling") {
+      lastCallingStatusRef.current = "calling";
+      if (audioEnabled) {
+        announcePatientCall(myToken.tokenNumber, myToken.patientName, myToken.room);
+      }
+      sendBrowserNotification("🔔 MEDIVANCE: Your Token is Called!", {
+        body: `Token #${myToken.tokenNumber} — ${myToken.doctorName} is ready for you in ${myToken.room}. Please enter now!`,
+      });
+    } else if (myToken && myToken.status !== "calling") {
+      lastCallingStatusRef.current = myToken.status;
+    }
+  }, [myToken?.status, myToken?.tokenNumber, myToken?.patientName, myToken?.room, audioEnabled]);
 
   // If patient has no personal token today, display general hospital queue pulse
   if (!myToken) {
@@ -79,6 +96,141 @@ export default function PatientLiveQueueCard() {
   const isCalling = myToken.status === "calling";
   const isInConsultation = myToken.status === "in_consultation";
   const isCompleted = myToken.status === "completed";
+
+  // If consultation is completed, render a clean, realistic Concluded Visit Summary (hide pre-visit checkin & waiting queue)
+  if (isCompleted) {
+    return (
+      <div className="relative overflow-hidden rounded-2xl border border-emerald-500/40 bg-white/95 p-5 sm:p-6 shadow-sm backdrop-blur-xl transition-all dark:border-emerald-500/30 dark:bg-[#041a24]/90 dark:shadow-[0_0_28px_rgba(16,185,129,0.15)]">
+        {/* Background Ambience Sheen */}
+        <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-emerald-500/10 blur-3xl" />
+
+        {/* TOP HEADER */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/80 dark:border-emerald-500/20">
+          <div className="flex items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:border dark:border-emerald-400/40 dark:text-emerald-300">
+              <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-white">
+                  Today&apos;s Consultation Concluded
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
+                  COMPLETED
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Your visit with {myToken.doctorName} has concluded. Your digital prescription and clinical notes are archived in your portal.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+            <Link
+              href="/patient/appointments"
+              className="py-2 px-3.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition shadow-sm"
+            >
+              View Prescriptions &amp; Records →
+            </Link>
+          </div>
+        </div>
+
+        {/* SUMMARY CARDS */}
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Card 1 */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-emerald-500/20 dark:bg-[#03151f]/80">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Completed Token
+            </p>
+            <div className="mt-1 flex items-baseline gap-2">
+              <span className="font-serif text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400">
+                #{myToken.tokenNumber}
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
+                Fulfilled
+              </span>
+            </div>
+            <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Session Time: {myToken.time}</span>
+            </p>
+          </div>
+
+          {/* Card 2 */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-emerald-500/20 dark:bg-[#03151f]/80">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Attending Physician
+            </p>
+            <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Stethoscope className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span>{myToken.doctorName}</span>
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {myToken.specialization}
+            </p>
+            <p className="mt-1.5 text-xs text-emerald-800 dark:text-emerald-300 font-medium flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              <span>{myToken.room}</span>
+            </p>
+          </div>
+
+          {/* Card 3 */}
+          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-emerald-500/20 dark:bg-[#03151f]/80 flex flex-col justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Follow-Up / Next Visit
+              </p>
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Need to book another visit or follow up with a specialist?
+              </p>
+            </div>
+            <Link
+              href="/patient/book"
+              className="mt-2.5 block text-center py-1.5 px-3 rounded-xl bg-primary text-white text-xs font-semibold hover:brightness-105 transition shadow-xs"
+            >
+              Book New Appointment +
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If consultation window elapsed while clinic was closed / doctor unavailable
+  if (myToken.status === "passed") {
+    return (
+      <div className="relative overflow-hidden rounded-2xl border border-amber-500/40 bg-white/95 p-5 sm:p-6 shadow-sm backdrop-blur-xl transition-all dark:border-amber-500/30 dark:bg-[#1f1707]/90 text-slate-800 dark:text-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:border dark:border-amber-400/40 dark:text-amber-300">
+              <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-white">
+                  Appointment Time Elapsed
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
+                  SLOT PASSED
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                Your scheduled consultation slot ({fmtTime(myToken.time)}) with {myToken.doctorName} has elapsed. Please choose an upcoming date to reschedule.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+            <Link
+              href="/patient/appointments"
+              className="py-2 px-3.5 rounded-xl bg-primary text-primary-fg text-xs font-semibold hover:brightness-105 transition shadow-sm"
+            >
+              Reschedule Visit →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // How many patients are ahead of current patient
   const aheadCount = tokens.filter(
@@ -196,10 +348,14 @@ export default function PatientLiveQueueCard() {
           </div>
           <button
             type="button"
-            onClick={playHospitalChime}
-            className="shrink-0 py-1.5 px-3 rounded-lg bg-emerald-600 text-white text-xs font-semibold shadow-xs hover:bg-emerald-700"
+            onClick={() => {
+              announcePatientCall(myToken.tokenNumber, myToken.patientName, myToken.room);
+            }}
+            className="shrink-0 py-1.5 px-3 rounded-lg bg-emerald-600 text-white text-xs font-semibold shadow-xs hover:bg-emerald-700 flex items-center gap-1 active:scale-[0.98]"
+            title="Replay doctor announcement audio"
           >
-            Acknowledge 🔔
+            <Volume2 className="h-3.5 w-3.5" />
+            <span>Hear Announcement 🔔</span>
           </button>
         </div>
       )}

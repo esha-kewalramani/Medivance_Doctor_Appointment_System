@@ -8,6 +8,7 @@ import { genRef, genTransactionId, makeSlots, todayISO, toMin, uid, weekdayOf, f
 import { toast } from "@/components/notifications/alerts";
 import { getSupabase, siteUrl } from "@/lib/supabase/client";
 import { fetchSession, loadAll, pushDiff } from "@/lib/supabase/sync";
+import { createSlotOfferOnCancellation, acceptOffer, declineOfferAndPromoteNext } from "@/lib/slotOfferService";
 
 // Backend mode: when NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY are set, everything is stored in Supabase. Otherwise the demo (LocalStorage) mode is used.
 const sb = getSupabase();
@@ -40,7 +41,7 @@ interface Ctx {
   user: CurrentUser | null;
   login: (role: Role, email: string, password: string, remember: boolean) => Res | Promise<Res>;
   logout: () => void;
-  registerPatient: (p: Omit<Patient, "id" | "registeredAt">) => Res<{ patient: Patient }> | Promise<Res<{ patient: Patient }>>;
+  registerPatient: (p: Omit<Patient, "id" | "registeredAt">) => Res<{ patient: Patient; confirmEmail?: boolean }> | Promise<Res<{ patient: Patient; confirmEmail?: boolean }>>;
   changePassword: (current: string, next: string) => Res | Promise<Res>;
   doctorById: (id: string) => Doctor | undefined;
   patientById: (id: string) => Patient | undefined;
@@ -62,6 +63,8 @@ interface Ctx {
   refreshSession: () => Promise<void>;
   setStatus: (id: string, status: AppointmentStatus) => Res;
   cancelAppointment: (id: string) => Res;
+  claimEarlierSlot: (offerId: string) => Res;
+  declineEarlierSlot: (offerId: string) => void;
   addReview: (doctorId: string, r: { author: string; rating: number; text: string }) => Res;
   saveDoctor: (d: Doctor, isNew?: boolean) => Res;
   removeDoctor: (id: string) => void;
@@ -239,8 +242,21 @@ export default function AppProvider({ children }: { children: ReactNode }) {
       }
     };
     window.addEventListener("storage", onStorage);
+
+    let bcSync: BroadcastChannel | null = null;
+    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+      bcSync = new BroadcastChannel("medivance_sync");
+      bcSync.onmessage = (ev) => {
+        if (ev.data?.type === "DATA_SYNC" && ev.data.data) {
+          dataRef.current = ev.data.data;
+          setData(ev.data.data);
+        }
+      };
+    }
+
     return () => {
       window.removeEventListener("storage", onStorage);
+      if (bcSync) bcSync.close();
       if (unsubscribeSb) unsubscribeSb();
     };
   }, []);
@@ -290,6 +306,16 @@ export default function AppProvider({ children }: { children: ReactNode }) {
           if (!error) {
             const s = await fetchSession(sb);
             if (s) {
+              // Strictly verify portal role matching
+              if (s.role !== role) {
+                // Immediate sign out from Supabase so mismatched session does not linger
+                await sb.auth.signOut();
+                const actualName = s.role === "doctor" ? "Doctor" : s.role === "admin" ? "Administrator" : "Patient";
+                return {
+                  ok: false,
+                  error: `This account is registered as a ${actualName}. Please switch to the ${actualName} Portal to sign in.`,
+                };
+              }
               sessionRef.current = s;
               setSession(s);
               writeJSON(KEYS.session, s, remember ? "local" : "session");
@@ -304,10 +330,13 @@ export default function AppProvider({ children }: { children: ReactNode }) {
 
       // 2. Local Storage Authentication Fallback
       const currentData = dataRef.current;
+      const isAdminEmail = cleanEmail === currentData.settings.adminEmail.toLowerCase();
+      const inDoctors = currentData.doctors.find((x) => x.email.toLowerCase() === cleanEmail);
+      const inPatients = currentData.patients.find((x) => x.email.toLowerCase() === cleanEmail);
 
-      // Check admin
-      if (role === "admin" || cleanEmail === currentData.settings.adminEmail.toLowerCase()) {
-        if (cleanEmail === currentData.settings.adminEmail.toLowerCase() && password === currentData.settings.adminPassword) {
+      // Check admin portal
+      if (role === "admin") {
+        if (isAdminEmail && password === currentData.settings.adminPassword) {
           const s: Session = { role: "admin", userId: "admin1" };
           removeKey(KEYS.session);
           removeKey(KEYS.session, "session");
@@ -316,50 +345,75 @@ export default function AppProvider({ children }: { children: ReactNode }) {
           setSession(s);
           return { ok: true, role: "admin" };
         }
-        if (role === "admin") return { ok: false, error: "Incorrect admin email or password." };
-      }
-
-      // Find in doctors or patients
-      let detectedRole: Role = role;
-      let user = (role === "doctor" ? currentData.doctors : currentData.patients).find(
-        (x) => x.email.toLowerCase() === cleanEmail
-      );
-
-      // Auto-detect role if user selected another tab
-      if (!user) {
-        const inDoctors = currentData.doctors.find((x) => x.email.toLowerCase() === cleanEmail);
-        if (inDoctors) {
-          detectedRole = "doctor";
-          user = inDoctors;
-        } else {
-          const inPatients = currentData.patients.find((x) => x.email.toLowerCase() === cleanEmail);
-          if (inPatients) {
-            detectedRole = "patient";
-            user = inPatients;
-          }
+        if (inDoctors || inPatients) {
+          const actual = inDoctors ? "Doctor" : "Patient";
+          return { ok: false, error: `This account is registered as a ${actual}. Please use the ${actual} Portal.` };
         }
+        return { ok: false, error: "Incorrect admin email or password." };
       }
 
-      if (!user) {
-        return { ok: false, error: `No account found with this email. Please check your email or register.` };
+      // If user attempted to log in as doctor or patient using admin credentials
+      if (isAdminEmail && password === currentData.settings.adminPassword) {
+        return {
+          ok: false,
+          error: "This account is registered as an Administrator. Please use the Administrator Portal to sign in.",
+        };
       }
 
-      if (user.password && user.password !== password) {
-        return { ok: false, error: "Incorrect password. Please try again." };
+      // Strict role verification for Patient Portal
+      if (role === "patient") {
+        if (inDoctors && !inPatients) {
+          return {
+            ok: false,
+            error: "This account is registered as a Doctor. Please switch to the Doctor Portal to sign in.",
+          };
+        }
+        if (!inPatients) {
+          return { ok: false, error: "No patient account found with this email. Please check your email or register." };
+        }
+        if (inPatients.password && inPatients.password !== password) {
+          return { ok: false, error: "Incorrect password. Please try again." };
+        }
+        const s: Session = {
+          role: "patient",
+          userId: inPatients.id,
+        };
+        removeKey(KEYS.session);
+        removeKey(KEYS.session, "session");
+        writeJSON(KEYS.session, s, remember ? "local" : "session");
+        sessionRef.current = s;
+        setSession(s);
+        return { ok: true, role: "patient" };
       }
 
-      const s: Session = {
-        role: detectedRole,
-        userId: user.id,
-        approval: detectedRole === "doctor" ? ((user as any).approval_status ?? "approved") : undefined,
-      };
+      // Strict role verification for Doctor Portal
+      if (role === "doctor") {
+        if (inPatients && !inDoctors) {
+          return {
+            ok: false,
+            error: "This account is registered as a Patient. Please switch to the Patient Portal to sign in.",
+          };
+        }
+        if (!inDoctors) {
+          return { ok: false, error: "No doctor account found with this email. Please contact the administrator." };
+        }
+        if (inDoctors.password && inDoctors.password !== password) {
+          return { ok: false, error: "Incorrect password. Please try again." };
+        }
+        const s: Session = {
+          role: "doctor",
+          userId: inDoctors.id,
+          approval: (inDoctors as any).approval_status ?? "approved",
+        };
+        removeKey(KEYS.session);
+        removeKey(KEYS.session, "session");
+        writeJSON(KEYS.session, s, remember ? "local" : "session");
+        sessionRef.current = s;
+        setSession(s);
+        return { ok: true, role: "doctor" };
+      }
 
-      removeKey(KEYS.session);
-      removeKey(KEYS.session, "session");
-      writeJSON(KEYS.session, s, remember ? "local" : "session");
-      sessionRef.current = s;
-      setSession(s);
-      return { ok: true, role: detectedRole };
+      return { ok: false, error: "Invalid role specified." };
     })();
   };
 
@@ -376,7 +430,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const registerPatient: Ctx["registerPatient"] = (p) => {
-    return (async (): Promise<Res<{ patient: Patient }>> => {
+    return (async (): Promise<Res<{ patient: Patient; confirmEmail?: boolean }>> => {
       if (!dataRef.current.settings.allowRegistration) {
         return { ok: false, error: "Registration is currently disabled by the administrator." };
       }
@@ -402,23 +456,61 @@ export default function AppProvider({ children }: { children: ReactNode }) {
               },
             },
           });
-          if (!error && r.session) {
-            const s = await fetchSession(sb);
-            if (s) {
-              sessionRef.current = s;
-              setSession(s);
-              writeJSON(KEYS.session, s);
-              await reload();
-              const pat = dataRef.current.patients.find((x) => x.id === s.userId);
-              if (pat) return { ok: true, patient: pat };
-            }
+
+          if (error) {
+            console.error("[Supabase Patient Registration Error]:", error);
+            return {
+              ok: false,
+              error: /registered|exists/i.test(error.message)
+                ? "An account with this email already exists in Supabase. Please sign in instead."
+                : error.message,
+            };
           }
-        } catch {
-          // offline fallback
+
+          if (r.user && Array.isArray(r.user.identities) && r.user.identities.length === 0) {
+            return {
+              ok: false,
+              error: "An account with this email already exists in Supabase. Please sign in instead.",
+            };
+          }
+
+          // Case A: Supabase project has "Confirm email" enabled -> no immediate session until confirmed
+          if (!r.session) {
+            return {
+              ok: true,
+              confirmEmail: true,
+              patient: {
+                ...p,
+                email,
+                id: r.user?.id || uid("p"),
+                registeredAt: new Date().toISOString(),
+                isGuest: false,
+              },
+            };
+          }
+
+          // Case B: Session returned -> claim profile into public.patients and sync immediately
+          const { error: ce } = await sb.rpc("claim_profile");
+          if (ce) {
+            console.warn("[claim_profile]:", ce.message);
+          }
+
+          const s = await fetchSession(sb);
+          if (s) {
+            sessionRef.current = s;
+            setSession(s);
+            writeJSON(KEYS.session, s);
+            await reload();
+            const pat = dataRef.current.patients.find((x) => x.id === s.userId);
+            if (pat) return { ok: true, patient: pat, confirmEmail: false };
+          }
+        } catch (err) {
+          console.error("[Supabase Patient Registration Exception]:", err);
+          return { ok: false, error: (err as Error)?.message || "Failed to register in Supabase." };
         }
       }
 
-      // Local / Offline fallback creation with password stored
+      // Local / Offline fallback creation with password stored (when Supabase is not configured)
       const patient: Patient = {
         ...p,
         email,
@@ -476,11 +568,11 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     if (!slot) return { ok: false, error: "This time is not part of the doctor's schedule." };
     if (slot.state === "booked") return { ok: false, error: "Sorry, this slot was just booked by someone else. Please choose another time." };
     if (slot.state === "past") return { ok: false, error: "This time has already passed." };
-    const appointment: Appointment = { id: uid("a"), ref: genRef(), patientId, doctorId, date, time, reason: reason.trim(), status: "pending", createdAt: new Date().toISOString() };
+    const appointment: Appointment = { id: uid("a"), ref: genRef(), patientId, doctorId, date, time, reason: reason.trim(), status: "approved", createdAt: new Date().toISOString() };
     commit((x) => ({ ...x, appointments: [appointment, ...x.appointments] }));
-    notify({ role: "doctor", userId: doctorId, title: "New appointment request", body: `${pat.name} requested ${fmtDate(date)} at ${fmtTime(time)} (${appointment.ref}).` });
+    notify({ role: "doctor", userId: doctorId, title: "New appointment confirmed", body: `${pat.name} booked and confirmed for ${fmtDate(date)} at ${fmtTime(time)} (${appointment.ref}).` });
     notify({ role: "admin", title: "New booking", body: `${pat.name} booked ${doc.name} - ${appointment.ref}.` });
-    notify({ role: "patient", userId: patientId, title: "Booking submitted", body: `Your request ${appointment.ref} with ${doc.name} is awaiting approval.` });
+    notify({ role: "patient", userId: patientId, title: "Appointment Confirmed", body: `Your consultation ${appointment.ref} with ${doc.name} is confirmed for ${fmtDate(date)} at ${fmtTime(time)}.` });
     return { ok: true, appointment };
   };
 
@@ -515,13 +607,13 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     if (!slot) return { ok: false, error: "This time is not part of the doctor's schedule." };
     if (slot.state === "booked") return { ok: false, error: "Sorry, this slot was just booked by someone else. Please choose another time.", code: "23505" };
     if (slot.state === "past") return { ok: false, error: "This time has already passed." };
-    const appointment: Appointment = { id: uid("a"), ref: genRef(), patientId: pat.id, doctorId, date, time, reason: reason.trim(), status: "pending", createdAt: new Date().toISOString() };
+    const appointment: Appointment = { id: uid("a"), ref: genRef(), patientId: pat.id, doctorId, date, time, reason: reason.trim(), status: "approved", createdAt: new Date().toISOString() };
     const payment: Payment = { id: uid("pay"), appointmentId: appointment.id, patientId: pat.id, doctorId, amount: doc.fee, currency: "PKR", status: "paid", method: "DEMO / SIMULATED PAYMENT", transactionId: genTransactionId(), paidAt: new Date().toISOString() };
     commit((x) => ({ ...x, appointments: [appointment, ...x.appointments], payments: [payment, ...x.payments] }));
     demoIdem.current.set(idempotencyKey, { appointment, payment });
-    notify({ role: "doctor", userId: doctorId, title: "New appointment request", body: `${pat.name} requested ${fmtDate(date)} at ${fmtTime(time)} (${appointment.ref}). Consultation fee paid (simulated).` });
+    notify({ role: "doctor", userId: doctorId, title: "New appointment confirmed", body: `${pat.name} confirmed for ${fmtDate(date)} at ${fmtTime(time)} (${appointment.ref}). Consultation fee paid.` });
     notify({ role: "admin", title: "New booking", body: `${pat.name} booked ${doc.name} - ${appointment.ref} (simulated payment ${payment.transactionId}).` });
-    notify({ role: "patient", userId: pat.id, title: "Payment successful (simulated)", body: `Rs ${doc.fee} for ${doc.name}. Transaction ${payment.transactionId}. Your request ${appointment.ref} is awaiting the doctor's approval.` });
+    notify({ role: "patient", userId: pat.id, title: "Appointment Confirmed", body: `Your visit with ${doc.name} on ${fmtDate(date)} at ${fmtTime(time)} is confirmed! Reference: ${appointment.ref}.` });
     return { ok: true, appointment, payment };
   };
 
@@ -540,6 +632,110 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     if (slot.state === "past") return { ok: false, error: "This time has already passed." };
 
     const emailLower = guestDetails.email.trim().toLowerCase();
+
+    // 1. Try Supabase backend guest booking RPC if Supabase is connected
+    if (sb) {
+      try {
+        const { data: r, error } = await sb.rpc("book_appointment_guest", {
+          p_doctor_id: doctorId,
+          p_date: date,
+          p_time: time,
+          p_reason: reason.trim() || "General Medical Consultation",
+          p_name: guestDetails.name.trim(),
+          p_email: emailLower,
+          p_phone: guestDetails.phone.trim(),
+          p_gender: guestDetails.gender || "Other",
+          p_age: guestDetails.age || null,
+          p_idempotency_key: idempotencyKey || null,
+        });
+
+        if (!error && r?.appointment) {
+          const a = r.appointment;
+          const p = r.payment;
+          const appointment: Appointment = {
+            id: a.id,
+            ref: a.ref,
+            patientId: a.patient_id,
+            doctorId: a.doctor_id,
+            date: a.date,
+            time: a.time,
+            reason: a.reason,
+            status: a.status,
+            createdAt: a.created_at,
+            isGuest: true,
+            guestDetails: {
+              name: guestDetails.name.trim(),
+              email: emailLower,
+              phone: guestDetails.phone.trim(),
+              gender: guestDetails.gender,
+              age: guestDetails.age,
+            },
+          };
+          const payment: Payment = p ? {
+            id: p.id,
+            appointmentId: p.appointment_id,
+            patientId: p.patient_id,
+            doctorId: p.doctor_id,
+            amount: p.amount,
+            currency: p.currency,
+            status: p.status,
+            method: p.method,
+            transactionId: p.transaction_id,
+            paidAt: p.paid_at,
+          } : {
+            id: uid("pay"),
+            appointmentId: appointment.id,
+            patientId: a.patient_id,
+            doctorId,
+            amount: doc.fee,
+            currency: "PKR",
+            status: "paid",
+            method: "DEMO / SIMULATED PAYMENT (GUEST)",
+            transactionId: genTransactionId(),
+            paidAt: new Date().toISOString(),
+          };
+
+          const cur = dataRef.current;
+          const merged: DataState = {
+            ...cur,
+            appointments: [appointment, ...cur.appointments.filter((x) => x.id !== appointment.id)],
+            payments: [payment, ...cur.payments.filter((x) => x.id !== payment.id)],
+          };
+          dataRef.current = merged;
+          setData(merged);
+          writeJSON(KEYS.data, merged);
+
+          // Broadcast to other open windows/tabs
+          if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+            const bc = new BroadcastChannel("medivance_sync");
+            bc.postMessage({ type: "DATA_SYNC", data: merged });
+            bc.close();
+          }
+
+          notify({
+            role: "doctor",
+            userId: doctorId,
+            title: "New Appointment Confirmed",
+            body: `${guestDetails.name.trim()} confirmed for ${fmtDate(date)} at ${fmtTime(time)} (${appointment.ref}). Phone: ${guestDetails.phone.trim()}.`,
+          });
+          notify({
+            role: "admin",
+            title: "New Booking (Guest)",
+            body: `${guestDetails.name.trim()} booked ${doc.name} - ${appointment.ref} (Fee: Rs ${doc.fee}).`,
+          });
+
+          return { ok: true, appointment, payment };
+        } else if (error) {
+          if (error.code === "23505" || /taken|booked/i.test(error.message)) {
+            return { ok: false, error: "Sorry, this slot was just booked by someone else. Please choose another time.", code: "23505" };
+          }
+          console.warn("[book_appointment_guest fallback]:", error.message);
+        }
+      } catch (err) {
+        console.warn("[book_appointment_guest error]:", err);
+      }
+    }
+
     let pat = d.patients.find((x) => x.email.toLowerCase() === emailLower);
     let isNewPatient = false;
     if (!pat) {
@@ -565,7 +761,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
       date,
       time,
       reason: reason.trim(),
-      status: "pending",
+      status: "approved",
       createdAt: new Date().toISOString(),
       isGuest: true,
       guestDetails: {
@@ -597,6 +793,12 @@ export default function AppProvider({ children }: { children: ReactNode }) {
       payments: [payment, ...x.payments],
     }));
 
+    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+      const bc = new BroadcastChannel("medivance_sync");
+      bc.postMessage({ type: "DATA_SYNC", data: dataRef.current });
+      bc.close();
+    }
+
     if (idempotencyKey) {
       demoIdem.current.set(idempotencyKey, { appointment, payment });
     }
@@ -604,8 +806,8 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     notify({
       role: "doctor",
       userId: doctorId,
-      title: "New Guest Appointment",
-      body: `${guestDetails.name.trim()} (Guest) requested ${fmtDate(date)} at ${fmtTime(time)} (${appointment.ref}). Phone: ${guestDetails.phone.trim()}.`,
+      title: "New Appointment Confirmed",
+      body: `${guestDetails.name.trim()} confirmed for ${fmtDate(date)} at ${fmtTime(time)} (${appointment.ref}). Phone: ${guestDetails.phone.trim()}.`,
     });
     notify({
       role: "admin",
@@ -817,6 +1019,24 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     const titles: Partial<Record<AppointmentStatus, string>> = { approved: "Appointment approved", rejected: "Appointment rejected", completed: "Appointment completed", cancelled: "Appointment cancelled", pending: "Appointment set to pending" };
     notify({ role: "patient", userId: a.patientId, title: titles[status] || "Appointment updated", body: `${a.ref} with ${doc?.name ?? "your doctor"} on ${fmtDate(a.date)} is now ${status}.` });
     toast(status === "rejected" || status === "cancelled" ? "info" : "success", titles[status] || "Appointment updated", a.ref);
+
+    if (status === "cancelled") {
+      const offer = createSlotOfferOnCancellation({
+        cancelledAppt: a,
+        allAppts: d.appointments,
+        doctors: d.doctors,
+        patients: d.patients,
+      });
+      if (offer) {
+        notify({
+          role: "patient",
+          userId: offer.patientId,
+          title: "⚡ Earlier Appointment Slot Available!",
+          body: `An earlier slot at ${fmtTime(offer.vacatedTime)} with ${doc?.name ?? "your doctor"} opened up! Tap to claim this slot.`,
+        });
+      }
+    }
+
     return { ok: true };
   };
 
@@ -830,7 +1050,113 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     notify({ role: "doctor", userId: a.doctorId, title: "Appointment cancelled", body: `${p?.name ?? "A patient"} cancelled ${a.ref} (${fmtDate(a.date)} ${fmtTime(a.time)}). The slot is free again.` });
     notify({ role: "admin", title: "Appointment cancelled", body: `${a.ref} was cancelled by the patient.` });
     toast("info", "Appointment cancelled", `${a.ref} - the slot is available again.`);
+
+    // Fast-Track Standby Promotion: Offer vacated earlier slot to next in-line patient
+    const offer = createSlotOfferOnCancellation({
+      cancelledAppt: a,
+      allAppts: d.appointments,
+      doctors: d.doctors,
+      patients: d.patients,
+    });
+    if (offer) {
+      const doc = d.doctors.find((x) => x.id === a.doctorId);
+      notify({
+        role: "patient",
+        userId: offer.patientId,
+        title: "⚡ Earlier Appointment Slot Available!",
+        body: `An earlier slot at ${fmtTime(offer.vacatedTime)} with ${doc?.name ?? "your doctor"} opened up due to a cancellation! Tap to claim this slot.`,
+      });
+      toast(
+        "success",
+        "Earlier Slot Fast-Track Alert",
+        `Offered the vacated ${fmtTime(offer.vacatedTime)} slot to ${offer.patientName} (next in line)!`
+      );
+    }
+
     return { ok: true };
+  };
+
+  const claimEarlierSlot: Ctx["claimEarlierSlot"] = (offerId) => {
+    const d = dataRef.current;
+    const accepted = acceptOffer(offerId);
+    if (!accepted) return { ok: false, error: "Slot offer not found or already claimed." };
+
+    const targetAppt = d.appointments.find((x) => x.id === accepted.targetAppointmentId);
+    if (!targetAppt) return { ok: false, error: "Appointment not found." };
+
+    // Move appointment time to the vacated earlier time
+    commit((x) => ({
+      ...x,
+      appointments: x.appointments.map((y) =>
+        y.id === accepted.targetAppointmentId ? { ...y, time: accepted.vacatedTime } : y
+      ),
+    }));
+
+    // Update Live Queue Token in localStorage if present
+    try {
+      const rawQueue = localStorage.getItem("medivance_live_queue_v1");
+      if (rawQueue) {
+        const tokens = JSON.parse(rawQueue);
+        const updatedTokens = tokens.map((t: any) =>
+          t.appointmentId === accepted.targetAppointmentId
+            ? { ...t, time: accepted.vacatedTime }
+            : t
+        );
+        localStorage.setItem("medivance_live_queue_v1", JSON.stringify(updatedTokens));
+        if ("BroadcastChannel" in window) {
+          const bc = new BroadcastChannel("medivance_live_queue");
+          bc.postMessage({ type: "QUEUE_UPDATE", tokens: updatedTokens });
+          bc.close();
+        }
+      }
+    } catch {}
+
+    const doc = d.doctors.find((x) => x.id === accepted.doctorId);
+    notify({
+      role: "patient",
+      userId: accepted.patientId,
+      title: "Fast-Track Slot Confirmed! ⚡",
+      body: `Your consultation with ${doc?.name ?? "your doctor"} on ${fmtDate(accepted.date)} has been moved up to ${fmtTime(accepted.vacatedTime)}.`,
+    });
+    notify({
+      role: "doctor",
+      userId: accepted.doctorId,
+      title: "Patient Moved to Earlier Slot",
+      body: `${accepted.patientName} accepted the vacated ${fmtTime(accepted.vacatedTime)} slot.`,
+    });
+    toast(
+      "success",
+      "Earlier Slot Confirmed! ⚡",
+      `Your consultation has been moved to ${fmtTime(accepted.vacatedTime)}!`
+    );
+    return { ok: true };
+  };
+
+  const declineEarlierSlot: Ctx["declineEarlierSlot"] = (offerId) => {
+    const d = dataRef.current;
+    const { nextOffer } = declineOfferAndPromoteNext({
+      offerId,
+      allAppts: d.appointments,
+      doctors: d.doctors,
+      patients: d.patients,
+    });
+
+    if (nextOffer) {
+      const doc = d.doctors.find((x) => x.id === nextOffer.doctorId);
+      notify({
+        role: "patient",
+        userId: nextOffer.patientId,
+        title: "⚡ Earlier Appointment Slot Available!",
+        body: `An earlier slot at ${fmtTime(nextOffer.vacatedTime)} with ${doc?.name ?? "your doctor"} opened up! Check your dashboard to claim it.`,
+      });
+      toast(
+        "info",
+        "Slot Offered to Next Patient",
+        `Passed the ${fmtTime(nextOffer.vacatedTime)} slot to ${nextOffer.patientName}.`
+      );
+    } else {
+      toast("info", "Offer Declined", "You will keep your original scheduled appointment time.");
+    }
   };
 
   const addReview: Ctx["addReview"] = (doctorId, r) => {
@@ -965,7 +1291,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
   const value: Ctx = {
     ready, theme, toggleTheme, data, session, user, login, logout, registerPatient, changePassword, doctorById, patientById, getSlots, bookAppointment,
     bookPaidAppointment, bookGuestAppointment, toggleAuraConsent, addPrescription, addMedicalRecord, rescheduleAppointment, registerDoctor, reviewApplication, createDoctorAsAdmin, requestPasswordReset, changeEmail, refreshSession,
-    setStatus, cancelAppointment, addReview, saveDoctor, removeDoctor, savePatient, removePatient, saveSpecialization, removeSpecialization,
+    setStatus, cancelAppointment, claimEarlierSlot, declineEarlierSlot, addReview, saveDoctor, removeDoctor, savePatient, removePatient, saveSpecialization, removeSpecialization,
     updateSettings, notify, markAllRead, clearNotifications, resetData,
   };
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

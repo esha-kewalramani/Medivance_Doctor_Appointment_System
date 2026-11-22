@@ -25,7 +25,7 @@ export default function DoctorAppointmentsPage() {
 
   const mine = useMemo(() => data.appointments.filter((a) => a.doctorId === session?.userId), [data.appointments, session]);
   const rows = mine
-    .filter((a) => (filter === "all" || a.status === filter) && (!q || `${a.ref} ${patientById(a.patientId)?.name ?? ""} ${a.reason}`.toLowerCase().includes(q.toLowerCase())))
+    .filter((a) => (filter === "all" || a.status === filter) && (!q || `${a.ref} ${a.guestDetails?.name ?? patientById(a.patientId)?.name ?? ""} ${a.reason}`.toLowerCase().includes(q.toLowerCase())))
     .sort((a, b) => (a.status === "pending" && b.status !== "pending" ? -1 : b.status === "pending" && a.status !== "pending" ? 1 : a.date + a.time < b.date + b.time ? 1 : -1));
 
   const act = async (a: Appointment, status: AppointmentStatus) => {

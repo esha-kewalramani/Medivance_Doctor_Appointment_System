@@ -54,13 +54,13 @@ export function scheduleAppointmentReminders(params: {
   const now = new Date();
   const apptDateTime = new Date(`${appointmentDate}T${appointmentTime}:00`);
 
-  // Calculate 24h before & 1h before timestamps
+  // Calculate 24h before & 30m before timestamps
   const time24hBefore = new Date(apptDateTime.getTime() - 24 * 60 * 60 * 1000);
-  const time1hBefore = new Date(apptDateTime.getTime() - 60 * 60 * 1000);
+  const time30mBefore = new Date(apptDateTime.getTime() - 30 * 60 * 1000);
 
-  // If appointment is already within 24h, mark 24h reminder as delivered/due
+  // If appointment is already within 24h or 30m, mark reminder as delivered/due
   const is24hDue = now >= time24hBefore;
-  const is1hDue = now >= time1hBefore;
+  const is30mDue = now >= time30mBefore;
 
   const newLogs: AppointmentDispatchLog[] = [
     // 1. Instant Confirmation SMS
@@ -135,9 +135,9 @@ export function scheduleAppointmentReminders(params: {
       sentAt: is24hDue ? now.toISOString() : undefined,
       status: is24hDue ? "delivered" : "scheduled",
     },
-    // 3. 1 Hour Before Reminder SMS
+    // 3. 30 Minutes Before Urgent Departure Alert SMS
     {
-      id: `disp-1h-sms-${appointmentId}`,
+      id: `disp-30m-sms-${appointmentId}`,
       appointmentId,
       patientName,
       phone,
@@ -146,16 +146,16 @@ export function scheduleAppointmentReminders(params: {
       appointmentDate,
       appointmentTime,
       channel: "SMS",
-      type: "REMINDER_1H",
-      title: "1-Hour Urgent Reminder",
-      message: `MEDIVANCE URGENT: Your appointment with ${doctorName} begins in 1 hour at ${appointmentTime}. Please proceed to ${room}. Live queue token is now live!`,
-      scheduledFor: time1hBefore.toISOString(),
-      sentAt: is1hDue ? now.toISOString() : undefined,
-      status: is1hDue ? "delivered" : "scheduled",
+      type: "REMINDER_30M",
+      title: "30-Minute Urgent Alert",
+      message: `MEDIVANCE 30-MIN ALERT: Dear ${patientName}, your consultation with ${doctorName} starts in 30 minutes at ${appointmentTime} (${room}). Please proceed to the clinic now! Your live OPD queue token is active.`,
+      scheduledFor: time30mBefore.toISOString(),
+      sentAt: is30mDue ? now.toISOString() : undefined,
+      status: is30mDue ? "delivered" : "scheduled",
     },
-    // 3. 1 Hour Before Reminder Email
+    // 3. 30 Minutes Before Urgent Departure Alert Email
     {
-      id: `disp-1h-email-${appointmentId}`,
+      id: `disp-30m-email-${appointmentId}`,
       appointmentId,
       patientName,
       phone,
@@ -164,12 +164,12 @@ export function scheduleAppointmentReminders(params: {
       appointmentDate,
       appointmentTime,
       channel: "EMAIL",
-      type: "REMINDER_1H",
-      title: `Final 1-Hour Reminder: ${doctorName} at ${appointmentTime}`,
-      message: `Dear ${patientName},\n\nYour consultation with ${doctorName} starts in approximately 1 hour at ${appointmentTime}.\n\nLocation: ${room}\n\nPlease check in at the OPD reception or use your portal QR code to announce your arrival.\n\nMEDIVANCE Healthcare System`,
-      scheduledFor: time1hBefore.toISOString(),
-      sentAt: is1hDue ? now.toISOString() : undefined,
-      status: is1hDue ? "delivered" : "scheduled",
+      type: "REMINDER_30M",
+      title: `30-Minute Departure Alert: ${doctorName} at ${appointmentTime}`,
+      message: `Dear ${patientName},\n\nYour consultation with ${doctorName} starts in 30 minutes at ${appointmentTime}.\n\nLocation: ${room}\n\nPlease proceed to the hospital OPD wing now. You can bypass the reception queue by scanning your digital gate pass or tapping Fast-Track Arrival on your portal.\n\nMEDIVANCE Healthcare System`,
+      scheduledFor: time30mBefore.toISOString(),
+      sentAt: is30mDue ? now.toISOString() : undefined,
+      status: is30mDue ? "delivered" : "scheduled",
     },
   ];
 

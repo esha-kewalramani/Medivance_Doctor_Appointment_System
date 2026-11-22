@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   FileText,
   Plus,
@@ -50,8 +51,23 @@ export default function DoctorPrescriptionModal({
   ]);
   const [instructions, setInstructions] = useState("Drink plenty of warm water. Rest adequately and return for review if symptoms persist.");
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (!open) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Close on Escape key press
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
+
+  if (!open || !mounted) return null;
 
   const handleAddMedication = () => {
     setMedications((prev) => [
@@ -106,32 +122,42 @@ export default function DoctorPrescriptionModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4 flex items-center justify-center">
-      <div className="relative w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-2xl backdrop-blur-2xl transition-all dark:border-cyan-500/40 dark:bg-[#06152b] dark:text-slate-100">
-        
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
-        {/* Modal Header */}
-        <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-cyan-500/20">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-teal-100 text-teal-700 dark:bg-cyan-950/80 dark:border dark:border-cyan-400/40 dark:text-cyan-300">
-            <FileText className="h-5 w-5" />
-          </span>
-          <div>
-            <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
-              Write Smart Digital Prescription
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              For: <strong className="text-teal-700 dark:text-cyan-400">{patientName}</strong> • Attending: {doctorName}
-            </p>
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] overflow-y-auto bg-slate-950/80 backdrop-blur-md p-3 sm:p-4 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-2xl backdrop-blur-2xl transition-all dark:border-cyan-500/40 dark:bg-[#06152b] dark:text-slate-100 my-auto animate-pop"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header with Prominent Close Button */}
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-cyan-500/20">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-teal-100 text-teal-700 dark:bg-cyan-950/80 dark:border dark:border-cyan-400/40 dark:text-cyan-300">
+              <FileText className="h-5 w-5" />
+            </span>
+            <div>
+              <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
+                Write Smart Digital Prescription
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                For: <strong className="text-teal-700 dark:text-cyan-400">{patientName}</strong> • Attending: {doctorName}
+              </p>
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center gap-1 py-1 px-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 dark:border-cyan-500/30 dark:bg-[#081f3d] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white text-xs font-semibold transition active:scale-[0.98]"
+            title="Close without issuing (Esc)"
+          >
+            <X className="h-4 w-4" />
+            <span>Close (Esc)</span>
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -258,12 +284,20 @@ export default function DoctorPrescriptionModal({
             />
           </div>
 
-          {/* Submit Button */}
-          <div className="pt-2">
+          {/* Submit & Cancel Action Buttons */}
+          <div className="pt-3 flex flex-col-reverse sm:flex-row items-center gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="w-full sm:w-auto px-4 h-10 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-100 dark:border-cyan-500/30 dark:bg-[#071d38] dark:text-slate-300 dark:hover:bg-[#0a274c] transition active:scale-[0.98]"
+            >
+              Cancel / Close for Now
+            </button>
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-10 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-700 to-cyan-700 text-white text-xs sm:text-sm font-bold shadow-md hover:brightness-105 active:scale-[0.99] transition disabled:opacity-70 dark:from-[#0072ff] dark:to-[#00b4d8] dark:shadow-[0_0_20px_rgba(0,180,216,0.4)]"
+              className="w-full flex-1 h-10 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-700 to-cyan-700 text-white text-xs sm:text-sm font-bold shadow-md hover:brightness-105 active:scale-[0.99] transition disabled:opacity-70 dark:from-[#0072ff] dark:to-[#00b4d8] dark:shadow-[0_0_20px_rgba(0,180,216,0.4)]"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -280,6 +314,7 @@ export default function DoctorPrescriptionModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

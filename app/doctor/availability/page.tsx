@@ -83,7 +83,7 @@ export default function AvailabilityPage() {
           {slots.length === 0 ? <p className="text-sm text-muted">No consultation hours on this day.</p> : (
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{slots.map((s) => {
               const ap = data.appointments.find((a) => a.doctorId === me.id && a.date === date && a.time === s.time && ["pending", "approved", "completed"].includes(a.status));
-              return <div key={s.time} className={`rounded-xl border px-3 py-2 text-xs ${s.state === "booked" ? "border-warn/40 bg-warn/10" : s.state === "past" ? "border-line/30 opacity-50" : "border-ok/40 bg-ok/10"}`}><p className="font-semibold">{fmtTime(s.time)}</p><p className="truncate text-muted">{s.state === "booked" ? `Booked - ${patientById(ap?.patientId ?? "")?.name ?? "patient"}` : s.state === "past" ? "Passed" : "Open"}</p></div>;
+              return <div key={s.time} className={`rounded-xl border px-3 py-2 text-xs ${s.state === "booked" ? "border-warn/40 bg-warn/10" : s.state === "past" ? "border-line/30 opacity-50" : "border-ok/40 bg-ok/10"}`}><p className="font-semibold">{fmtTime(s.time)}</p><p className="truncate text-muted">{s.state === "booked" ? `Booked - ${ap?.guestDetails?.name || patientById(ap?.patientId ?? "")?.name || "Patient"}` : s.state === "past" ? "Passed" : "Open"}</p></div>;
             })}</div>)}
         </div>
       </div>

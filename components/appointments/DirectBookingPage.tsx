@@ -24,7 +24,7 @@ import {
 import Avatar from "@/components/ui/Avatar";
 import { useApp } from "@/hooks/useApp";
 import { useQueryParam } from "@/hooks/useQueryParam";
-import { fmtDate, fmtTime, money, todayISO, weekdayOf } from "@/lib/utilities";
+import { addDays, fmtDate, fmtTime, money, todayISO, weekdayOf } from "@/lib/utilities";
 import { toast } from "@/components/notifications/alerts";
 import ReceiptModal from "@/components/appointments/ReceiptModal";
 import { Appointment, Doctor, Payment } from "@/types";
@@ -140,21 +140,39 @@ export default function DirectBookingPage() {
   const selectedDoctor: Doctor | undefined =
     doctorById(selectedDoctorId) || (data.doctors.length > 0 ? data.doctors[0] : undefined);
 
-  // Set initial selected date
-  useEffect(() => {
-    if (!selectedDate && selectedDoctor) {
-      setSelectedDate(todayISO());
+  // Find first upcoming date with available free slots
+  const firstAvailableDate = useMemo(() => {
+    if (!selectedDoctor) return todayISO();
+    for (let i = 0; i < 14; i++) {
+      const d = addDays(todayISO(), i);
+      const dayOfWeek = weekdayOf(d);
+      const works = selectedDoctor.availability?.some((w) => w.day === dayOfWeek);
+      if (works) {
+        const slots = getSlots(selectedDoctor.id, d);
+        if (slots.some((s) => s.state === "free")) {
+          return d;
+        }
+      }
     }
-  }, [selectedDate, selectedDoctor]);
+    return todayISO();
+  }, [selectedDoctor, getSlots]);
 
-  // Available slots for selected doctor and date
-  const availableSlots = useMemo(() => {
-    if (!selectedDoctor?.id || !selectedDate) return DEFAULT_TIME_SLOTS.map((t) => ({ time: t, state: "free" as const }));
-    const computed = getSlots(selectedDoctor.id, selectedDate);
-    if (!computed || computed.length === 0) {
-      return DEFAULT_TIME_SLOTS.map((t) => ({ time: t, state: "free" as const }));
+  // Set initial selected date (auto-select first available date if today's hours are wound up or 0 slots)
+  useEffect(() => {
+    if (!selectedDoctor) return;
+    const todayFree = getSlots(selectedDoctor.id, todayISO()).filter((s) => s.state === "free").length;
+    if (!selectedDate || (selectedDate === todayISO() && todayFree === 0)) {
+      if (firstAvailableDate && firstAvailableDate !== selectedDate) {
+        setSelectedDate(firstAvailableDate);
+      }
     }
-    return computed;
+  }, [selectedDoctor, selectedDate, firstAvailableDate, getSlots]);
+
+  // Available slots for selected doctor and date (strictly from doctor schedule & real bookings)
+  const availableSlots = useMemo(() => {
+    if (!selectedDoctor?.id || !selectedDate) return [];
+    const computed = getSlots(selectedDoctor.id, selectedDate);
+    return computed || [];
   }, [selectedDoctor, selectedDate, getSlots]);
 
   // Set default time slot
@@ -245,7 +263,7 @@ export default function DirectBookingPage() {
         dateIso: iso,
         isCurrentMonth: true,
         isPast,
-        isAvailable: works || !isPast,
+        isAvailable: works,
       });
     }
 
@@ -990,34 +1008,79 @@ export default function DirectBookingPage() {
                 </div>
               </div>
 
-              {/* Slot Pills Grid: exactly 4 columns x 2 rows */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-                {availableSlots.slice(0, 8).map((s) => {
-                  const isFree = s.state === "free";
-                  const isSelected = selectedTime === s.time;
-
-                  return (
+              {/* Slot Pills Grid or Concluded/Off notice */}
+              {availableSlots.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-300 dark:border-line/60 bg-surface-2/30 p-5 text-center text-xs">
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">
+                    No Consultation Hours on {fmtDate(selectedDate)} ({weekdayOf(selectedDate)})
+                  </p>
+                  <p className="mt-1 text-muted text-[11px]">
+                    Dr. {selectedDoctor?.name} is not on duty on {weekdayOf(selectedDate)}s.
+                  </p>
+                  {firstAvailableDate && firstAvailableDate !== selectedDate && (
                     <button
-                      key={s.time}
                       type="button"
-                      disabled={!isFree}
-                      onClick={() => {
-                        setSelectedTime(s.time);
-                        setErrors((prev) => ({ ...prev, time: "" }));
-                      }}
-                      className={`rounded-xl py-2 px-2.5 text-xs font-bold text-center transition border ${
-                        isSelected
-                          ? "bg-primary text-primary-fg border-primary shadow-glow ring-2 ring-primary/40"
-                          : isFree
-                          ? "border-slate-200 bg-white text-slate-800 hover:border-primary hover:text-primary dark:border-line/60 dark:bg-surface-2/50 dark:text-fg hover:bg-primary/5"
-                          : "border-slate-200/60 bg-slate-100/60 text-slate-400 dark:border-line/30 dark:bg-muted/10 dark:text-muted line-through opacity-40 cursor-not-allowed"
-                      }`}
+                      onClick={() => { setSelectedDate(firstAvailableDate); setSelectedTime(""); }}
+                      className="mt-3.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-fg text-xs font-bold hover:brightness-105 transition"
                     >
-                      {fmtTime(s.time)}
+                      &rarr; Jump to Next Available Clinic ({fmtDate(firstAvailableDate)})
                     </button>
-                  );
-                })}
-              </div>
+                  )}
+                </div>
+              ) : availableSlots.every((s) => s.state !== "free") ? (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    {selectedDate === todayISO()
+                      ? "Today's clinic hours have concluded"
+                      : "All appointment slots on this day are taken"}
+                  </p>
+                  <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                    {selectedDate === todayISO()
+                      ? "The doctor has wrapped up consultation hours for today. Please choose an upcoming day."
+                      : "All consultation slots for this date are already booked or past."}
+                  </p>
+                  {firstAvailableDate && firstAvailableDate !== selectedDate && (
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedDate(firstAvailableDate); setSelectedTime(""); }}
+                      className="mt-1 inline-flex items-center gap-1 font-bold text-teal-700 dark:text-cyan-400 hover:underline"
+                    >
+                      &rarr; View next available openings on {fmtDate(firstAvailableDate)} ({weekdayOf(firstAvailableDate)})
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                  {availableSlots.slice(0, 8).map((s) => {
+                    const isFree = s.state === "free";
+                    const isSelected = selectedTime === s.time;
+
+                    return (
+                      <button
+                        key={s.time}
+                        type="button"
+                        disabled={!isFree}
+                        onClick={() => {
+                          setSelectedTime(s.time);
+                          setErrors((prev) => ({ ...prev, time: "" }));
+                        }}
+                        className={`rounded-xl py-2 px-2.5 text-xs font-bold text-center transition border ${
+                          isSelected
+                            ? "bg-primary text-primary-fg border-primary shadow-glow ring-2 ring-primary/40"
+                            : isFree
+                            ? "border-slate-200 bg-white text-slate-800 hover:border-primary hover:text-primary dark:border-line/60 dark:bg-surface-2/50 dark:text-fg hover:bg-primary/5"
+                            : "border-slate-200/60 bg-slate-100/60 text-slate-400 dark:border-line/30 dark:bg-muted/10 dark:text-muted line-through opacity-40 cursor-not-allowed"
+                        }`}
+                      >
+                        {fmtTime(s.time)}
+                        {s.state === "past" && <span className="block text-[9px] font-normal no-underline">Passed</span>}
+                        {s.state === "booked" && <span className="block text-[9px] font-normal no-underline">Booked</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* RIGHT: PATIENT DETAILS (2x2 FORM GRID) */}

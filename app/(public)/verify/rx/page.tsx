@@ -96,13 +96,23 @@ function VerificationContent() {
         
         {/* TOP NAVIGATION / RETURN TO DASHBOARD */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link
-            href={dashboardLink}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-4 py-2 text-xs font-semibold text-slate-700 shadow-xs backdrop-blur-md hover:bg-slate-100 hover:text-slate-900 transition dark:border-cyan-500/30 dark:bg-[#06152b]/80 dark:text-cyan-300 dark:hover:bg-cyan-950/50"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>{dashboardLabel}</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-700 shadow-xs backdrop-blur-md hover:bg-slate-100 hover:text-slate-900 transition dark:border-cyan-500/30 dark:bg-[#06152b]/80 dark:text-cyan-300 dark:hover:bg-cyan-950/50"
+              title="Return to previous screen in same window"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </button>
+            <Link
+              href={dashboardLink}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white/80 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs backdrop-blur-md hover:bg-slate-100 hover:text-slate-900 transition dark:border-cyan-500/30 dark:bg-[#06152b]/80 dark:text-cyan-300 dark:hover:bg-cyan-950/50"
+            >
+              <span>{dashboardLabel}</span>
+            </Link>
+          </div>
 
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <ShieldCheck className="h-4 w-4 text-emerald-500" />

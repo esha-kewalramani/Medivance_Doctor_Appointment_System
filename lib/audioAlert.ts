@@ -69,26 +69,98 @@ export async function sendBrowserNotification(title: string, options?: Notificat
   return false;
 }
 
-// Crisp Hospital Voice Announcement using Web Speech API
-export function announcePatientCall(tokenNumber: number, patientName: string, room: string) {
-  // First play the hospital dual-tone chime
-  playHospitalChime();
+// Active announcement session tracking
+let activeAnnouncementId = 0;
+let repeatTimer: ReturnType<typeof setTimeout> | null = null;
 
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-
-  try {
-    window.speechSynthesis.cancel(); // Clear any queued speech
-    const message = `Token number ${tokenNumber}. Patient ${patientName}. Please proceed to ${room}.`;
-    const utterance = new SpeechSynthesisUtterance(message);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.05;
-    utterance.volume = 1;
-
-    // Small delay after chime for realistic hospital broadcast
-    setTimeout(() => {
-      window.speechSynthesis.speak(utterance);
-    }, 600);
-  } catch {
-    // Graceful fallback
+// Stop any active announcement immediately across tab / speech synthesis
+export function stopAnnouncement(broadcast = true) {
+  activeAnnouncementId++;
+  if (repeatTimer) {
+    clearTimeout(repeatTimer);
+    repeatTimer = null;
   }
+
+  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch {
+      // ignore
+    }
+  }
+
+  if (broadcast && typeof window !== "undefined" && "BroadcastChannel" in window) {
+    try {
+      const bc = new BroadcastChannel("medivance_live_queue");
+      bc.postMessage({ type: "STOP_ANNOUNCEMENT" });
+      bc.close();
+    } catch {
+      // ignore
+    }
+  }
+}
+
+// Crisp Hospital Voice Announcement with maximum 3 repeats and instant cancellation
+export function announcePatientCall(
+  tokenNumber: number,
+  patientName: string,
+  room: string,
+  maxRepeats = 3
+) {
+  if (typeof window === "undefined") return;
+
+  // Stop any ongoing announcement before starting a new one
+  stopAnnouncement(false);
+
+  const sessionId = ++activeAnnouncementId;
+  let currentCount = 0;
+
+  const playIteration = () => {
+    if (sessionId !== activeAnnouncementId) return;
+
+    // 1. Play hospital chime
+    playHospitalChime();
+
+    if (!("speechSynthesis" in window)) return;
+
+    try {
+      window.speechSynthesis.cancel();
+      const message = `Token number ${tokenNumber}. Patient ${patientName}. Please proceed to ${room}.`;
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.05;
+      utterance.volume = 1;
+
+      utterance.onend = () => {
+        currentCount++;
+        if (sessionId !== activeAnnouncementId) return;
+
+        // Repeat only up to 3 times maximum
+        if (currentCount < maxRepeats) {
+          repeatTimer = setTimeout(() => {
+            if (sessionId === activeAnnouncementId) {
+              playIteration();
+            }
+          }, 2500); // 2.5 second pause between repeats
+        } else {
+          stopAnnouncement(false);
+        }
+      };
+
+      utterance.onerror = () => {
+        stopAnnouncement(false);
+      };
+
+      // Delay speech slightly to let hospital chime ring clearly first
+      repeatTimer = setTimeout(() => {
+        if (sessionId === activeAnnouncementId) {
+          window.speechSynthesis.speak(utterance);
+        }
+      }, 700);
+    } catch {
+      // graceful fallback
+    }
+  };
+
+  playIteration();
 }
