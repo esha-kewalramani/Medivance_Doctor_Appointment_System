@@ -60,7 +60,8 @@ export default function UnifiedAuthCard({ initialRole = "patient" }: UnifiedAuth
 
   useEffect(() => {
     if (ready && session?.role) {
-      const dest = next && next.startsWith("/") ? next : `/${session.role}`;
+      const isAppointmentRoute = next && (next.includes("appointment") || next.includes("/book"));
+      const dest = next && next.startsWith("/") && !isAppointmentRoute ? next : `/${session.role}`;
       router.replace(dest);
     }
   }, [ready, session, next, router]);
@@ -96,7 +97,8 @@ export default function UnifiedAuthCard({ initialRole = "patient" }: UnifiedAuth
 
       const confirmedRole = (res as { role?: Role }).role || role;
       toast("success", "Welcome to MEDIVANCE", `Signed in to ${confirmedRole.toUpperCase()} portal.`);
-      const dest = next && next.startsWith("/") ? next : `/${confirmedRole}`;
+      const isAppointmentRoute = next && (next.includes("appointment") || next.includes("/book"));
+      const dest = next && next.startsWith("/") && !isAppointmentRoute ? next : `/${confirmedRole}`;
       router.push(dest);
     } catch {
       setErrors((prev) => ({

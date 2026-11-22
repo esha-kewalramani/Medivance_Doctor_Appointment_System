@@ -25,7 +25,7 @@ export default function PublicNavbar() {
     { label: "Inside", href: "/inside", icon: HelpCircle, match: (p) => p.startsWith("/inside") },
     { label: "Doctors", href: "/doctors", icon: Stethoscope, match: (p) => p.startsWith("/doctors") || p.startsWith("/patient/doctors") },
     { label: "Live Location", href: "/location", icon: MapPin, match: (p) => p.startsWith("/location") },
-    { label: "Appointments", href: role ? `/${role}/appointments` : "/login/patient?next=/patient/appointments", icon: CalendarCheck, match: (p) => /^\/(patient|doctor|admin)\/appointments/.test(p) || (!role && p.startsWith("/login/")) },
+    { label: "Appointments", href: role ? `/${role}/appointments` : "/book", icon: CalendarCheck, match: (p) => p.startsWith("/book") || /^\/(patient|doctor|admin)\/appointments/.test(p) },
     { label: "Workspace", href: "/workspace", icon: LayoutGrid, match: (p) => p.startsWith("/workspace") || p === "/login" },
   ];
 
