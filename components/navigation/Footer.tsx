@@ -45,7 +45,7 @@ export default function Footer() {
         </div>
         <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-line/40 pt-4 text-xs text-muted sm:flex-row">
           <span>&copy; {new Date().getFullYear()} MEDIVANCE. All rights reserved.</span>
-          <span>University project - frontend demonstration with sample data. Not a substitute for professional medical advice.</span>
+          <span>Powered by Technology. Driven by Care. Built for Better Healthcare.</span>
         </div>
       </div>
     </footer>

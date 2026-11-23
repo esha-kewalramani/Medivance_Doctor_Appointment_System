@@ -322,7 +322,6 @@ html.splash-done #mdv-splash-screen { display: none !important; }
 .sp1 { --u: min(1100px, 92vw); position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 52%, #0b3aa8 0%, #0a2a7a 38%, #061a52 70%, #040f33 100%); }
 .sp1-stage { position: absolute; left: 50%; top: 50%; width: var(--u); aspect-ratio: 11 / 7; transform: translate(-50%, -50%); }
 .sp1-glow { position: absolute; left: 50%; top: 46%; width: 62%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, rgb(56 160 255 / .55) 0%, rgb(30 90 220 / .25) 40%, transparent 68%); opacity: 0; animation: sp1Glow .7s ease-out .05s forwards, sp1Breath 2.6s ease-in-out .9s infinite; }
-.sp1-beam { position: absolute; left: 50%; top: 2%; width: 1.2%; height: 26%; transform: translateX(-50%) scaleY(0); transform-origin: top; background: linear-gradient(#bfe6ff, rgb(56 189 248 / .0)); opacity: 0; animation: sp1Beam .4s ease-out .3s forwards; }
 .sp1-rings { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 .sp1-ring { transform-box: fill-box; transform-origin: center; opacity: 0; animation: sp1Ring .6s ease-out forwards; }
 .sp1-logo { position: absolute; left: 50%; top: 45%; width: 58%; transform: translate(-50%, -50%); animation: sp1LogoIn .7s ease-out both; }
@@ -333,8 +332,7 @@ html.splash-done #mdv-splash-screen { display: none !important; }
 .sp1-tag { position: absolute; left: 0; width: 100%; top: 86%; text-align: center; font-size: calc(var(--u) * .022); letter-spacing: .28em; text-transform: uppercase; color: #bcd9ff; opacity: 0; animation: sp1Up .4s ease-out 1.5s forwards; }
 @keyframes sp1Glow { to { opacity: 1 } }
 @keyframes sp1Breath { 0%,100% { transform: translate(-50%,-50%) scale(1) } 50% { transform: translate(-50%,-50%) scale(1.06) } }
-@keyframes sp1Beam { to { opacity: .9; transform: translateX(-50%) scaleY(1) } }
 @keyframes sp1Ring { from { opacity: 0; transform: scale(.4) } to { opacity: .9; transform: scale(1) } }
 @keyframes sp1Up { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }
 @keyframes sp1Sweep { to { transform: translateX(120%) } }
-@media (prefers-reduced-motion: reduce) { .sp1 * { animation: none !important; opacity: 1 !important; transform: none; } .sp1-beam { opacity: .6 !important; transform: translateX(-50%) !important; } .sp1-glow { transform: translate(-50%,-50%) !important; } .sp1-logo { transform: translate(-50%,-50%) !important; } }
+@media (prefers-reduced-motion: reduce) { .sp1 * { animation: none !important; opacity: 1 !important; transform: none; } .sp1-glow { transform: translate(-50%,-50%) !important; } .sp1-logo { transform: translate(-50%,-50%) !important; } }

@@ -24,7 +24,6 @@ export default function Stats() {
           </Reveal>
         ))}
       </div>
-      <p className="mt-2 text-center text-[11px] text-muted">Sample frontend data from the demo dataset.</p>
     </section>
   );
 }

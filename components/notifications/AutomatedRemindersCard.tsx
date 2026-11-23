@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Mail,
   MessageSquare,
+  MessageCircle,
   Phone,
   Radio,
   Send,
@@ -22,6 +23,7 @@ import {
   saveDispatchLogs,
   scheduleAppointmentReminders,
 } from "@/lib/notificationService";
+import { formatWhatsAppNumber } from "@/lib/whatsapp/whatsapp";
 import { useApp } from "@/hooks/useApp";
 
 export default function AutomatedRemindersCard() {
@@ -404,7 +406,16 @@ export default function AutomatedRemindersCard() {
               )}
             </div>
 
-            <div className="sticky bottom-0 z-10 bg-[#071a33] mt-5 pt-3 border-t border-cyan-500/20 flex justify-end">
+            <div className="sticky bottom-0 z-10 bg-[#071a33] mt-5 pt-3 border-t border-cyan-500/20 flex items-center justify-between gap-2">
+              <a
+                href={`https://api.whatsapp.com/send?phone=${formatWhatsAppNumber(recipientPhone)}&text=${encodeURIComponent(selectedPreview.message)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2 px-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95"
+              >
+                <MessageCircle className="h-4 w-4 fill-white" />
+                <span>Send to WhatsApp</span>
+              </a>
               <button
                 onClick={() => setSelectedPreview(null)}
                 className="py-2 px-5 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 text-slate-950 font-bold text-xs hover:brightness-110 shadow-sm"

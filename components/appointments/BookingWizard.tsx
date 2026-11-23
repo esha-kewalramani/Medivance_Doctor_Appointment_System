@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, CreditCard, Lock, Receipt, Search, Smartphone, UserCheck, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, CreditCard, Lock, MessageCircle, Receipt, Search, Smartphone, UserCheck, UserPlus } from "lucide-react";
+import { formatWhatsAppNumber } from "@/lib/whatsapp/whatsapp";
 import Avatar from "@/components/ui/Avatar";
 import { useApp } from "@/hooks/useApp";
 import { useQueryParam } from "@/hooks/useQueryParam";
@@ -207,9 +208,31 @@ export default function BookingWizard() {
             </li>
             <li className="flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-              <span>Automated <strong>30-Minute Urgent Departure SMS Alert</strong> scheduled to <strong>{clientPhone}</strong></span>
+              <span>Automated <strong>30-Minute Urgent Departure Alert</strong> scheduled to <strong>{clientPhone}</strong></span>
             </li>
           </ul>
+        </div>
+
+        {/* Instant WhatsApp Delivery Action */}
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3.5 text-left">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#25D366] text-white shadow-sm">
+              <MessageCircle className="h-5 w-5 fill-white" />
+            </span>
+            <div>
+              <p className="text-xs font-bold text-emerald-950 dark:text-emerald-200">Receive Confirmation on WhatsApp</p>
+              <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80">Sends your digital gate pass & appointment token straight to your WhatsApp</p>
+            </div>
+          </div>
+          <a
+            href={`https://api.whatsapp.com/send?phone=${formatWhatsAppNumber(clientPhone || "03001234567")}&text=${encodeURIComponent(`🏥 *MEDIVANCE HEALTHCARE SYSTEM*\n*Booking Confirmation*\n\nDear *${clientName}*,\nYour consultation has been confirmed:\n\n👨‍⚕️ *Doctor:* ${doctor.name} (${doctor.specialization})\n📅 *Date:* ${fmtDate(ap.date)}\n⏰ *Time:* ${fmtTime(ap.time)}\n📍 *Location:* Room 102 - OPD Heart Wing\n🎫 *Reference:* #${ap.ref}\n\n⚡ Live gate pass: https://medivance.pk/patient\n\n_Powered by Technology. Driven by Care._`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 shrink-0 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs py-2 px-3.5 shadow-sm transition active:scale-95"
+          >
+            <MessageCircle className="h-4 w-4 fill-white" />
+            <span>Open WhatsApp Pass</span>
+          </a>
         </div>
 
         {ap.isGuest && (

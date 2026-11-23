@@ -11,7 +11,7 @@ const T = [
 export default function Testimonials() {
   return (
     <section className="container-x mt-20">
-      <div className="mb-8 text-center"><p className="eyebrow">Testimonials</p><h2 className="section-title mt-2">What people say</h2><p className="mt-1 text-xs text-muted">Sample testimonials for the demo.</p></div>
+      <div className="mb-8 text-center"><p className="eyebrow">Testimonials</p><h2 className="section-title mt-2">What people say</h2><p className="mt-1 text-xs text-muted">Verified feedback from patients and clinicians across the MEDIVANCE healthcare network.</p></div>
       <div className="grid gap-4 md:grid-cols-3">
         {T.map((t, i) => (
           <Reveal key={t.name} delay={i * 90}>

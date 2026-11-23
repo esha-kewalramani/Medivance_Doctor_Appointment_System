@@ -53,45 +53,284 @@ export default function AvailabilityPage() {
   return (
     <>
       <PageHeader title="Availability" subtitle="Choose your working days, consultation hours and slot length." />
-      <div className="card mb-5 p-5">
-        <h2 className="mb-3 font-display text-lg font-semibold">Working weekdays</h2>
-        <div className="flex flex-wrap gap-2">{WEEKDAYS.map((d) => { const on = me.availability.some((w) => w.day === d); return <button key={d} onClick={() => toggleDay(d)} aria-pressed={on} className={`btn btn-sm ${on ? "bg-primary text-primary-fg shadow-glow" : "btn-ghost"}`}>{d}</button>; })}</div>
-        <div className="mt-4 flex items-center gap-3"><label className="label !mb-0" htmlFor="slotmin">Slot length</label>
-          <select id="slotmin" className="input !w-auto" value={me.slotMinutes} onChange={(e) => { const r = saveDoctor({ ...me, slotMinutes: Number(e.target.value) }); if (r.ok) toast("success", "Slot length updated", `Slots are now ${e.target.value} minutes.`); }}>
-            {[15, 20, 30, 45, 60].map((m) => <option key={m} value={m}>{m} minutes</option>)}</select></div>
+
+      {/* Weekdays & Slot Settings */}
+      <div className="card mb-5 p-4 sm:p-6">
+        <h2 className="mb-3 font-display text-base sm:text-lg font-semibold">Working Weekdays</h2>
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          {WEEKDAYS.map((d) => {
+            const on = me.availability.some((w) => w.day === d);
+            return (
+              <button
+                key={d}
+                onClick={() => toggleDay(d)}
+                aria-pressed={on}
+                className={`btn btn-sm px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-xl transition ${
+                  on ? "bg-primary text-primary-fg shadow-glow" : "btn-ghost"
+                }`}
+              >
+                {d}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 border-t border-line/40 pt-3.5">
+          <label className="label !mb-0 text-xs sm:text-sm" htmlFor="slotmin">
+            Consultation Slot Length:
+          </label>
+          <select
+            id="slotmin"
+            className="input !w-full sm:!w-auto text-xs sm:text-sm font-medium"
+            value={me.slotMinutes}
+            onChange={(e) => {
+              const r = saveDoctor({ ...me, slotMinutes: Number(e.target.value) });
+              if (r.ok) toast("success", "Slot length updated", `Slots are now ${e.target.value} minutes.`);
+            }}
+          >
+            {[15, 20, 30, 45, 60].map((m) => (
+              <option key={m} value={m}>
+                {m} minutes
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
-      <div className="grid gap-5 lg:grid-cols-5">
-        <div className="space-y-5 lg:col-span-2">
-          <form onSubmit={add} className="card space-y-3 p-5">
-            <h2 className="font-display text-lg font-semibold">Add consultation hours</h2>
-            <div><label className="label" htmlFor="a-day">Day</label><select id="a-day" className="input" value={form.day} onChange={(e) => setForm({ ...form, day: e.target.value as Weekday })}>{WEEKDAYS.map((d) => <option key={d}>{d}</option>)}</select></div>
-            <div className="grid grid-cols-2 gap-3"><div><label className="label" htmlFor="a-s">From</label><input id="a-s" type="time" className="input" value={form.start} onChange={(e) => setForm({ ...form, start: e.target.value })} /></div><div><label className="label" htmlFor="a-e">To</label><input id="a-e" type="time" className="input" value={form.end} onChange={(e) => setForm({ ...form, end: e.target.value })} /></div></div>
-            <button className="btn-primary w-full"><Plus className="h-4 w-4" /> Add hours</button>
+
+      {/* Main Grid: Management & Slot Overview */}
+      <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
+        {/* Left Column: Form & Current Windows */}
+        <div className="space-y-4 sm:space-y-5 lg:col-span-5 xl:col-span-5">
+          <form onSubmit={add} className="card space-y-3 p-4 sm:p-5">
+            <h2 className="font-display text-base sm:text-lg font-semibold">Add Consultation Hours</h2>
+            <div>
+              <label className="label text-xs sm:text-sm" htmlFor="a-day">
+                Day of Week
+              </label>
+              <select
+                id="a-day"
+                className="input text-xs sm:text-sm"
+                value={form.day}
+                onChange={(e) => setForm({ ...form, day: e.target.value as Weekday })}
+              >
+                {WEEKDAYS.map((d) => (
+                  <option key={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              <div>
+                <label className="label text-xs sm:text-sm" htmlFor="a-s">
+                  From (Start)
+                </label>
+                <input
+                  id="a-s"
+                  type="time"
+                  className="input text-xs sm:text-sm"
+                  value={form.start}
+                  onChange={(e) => setForm({ ...form, start: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="label text-xs sm:text-sm" htmlFor="a-e">
+                  To (End)
+                </label>
+                <input
+                  id="a-e"
+                  type="time"
+                  className="input text-xs sm:text-sm"
+                  value={form.end}
+                  onChange={(e) => setForm({ ...form, end: e.target.value })}
+                />
+              </div>
+            </div>
+            <button className="btn-primary w-full text-xs sm:text-sm">
+              <Plus className="h-4 w-4" /> Add Hours
+            </button>
           </form>
-          <div className="card p-5">
-            <h2 className="mb-3 font-display text-lg font-semibold">Current windows</h2>
-            <ul className="space-y-2">{[...me.availability].sort((a, b) => WEEKDAYS.indexOf(a.day) - WEEKDAYS.indexOf(b.day) || toMin(a.start) - toMin(b.start)).map((w) => (
-              <li key={w.id} className="flex items-center justify-between gap-2 rounded-xl border border-line/40 bg-primary/5 px-3 py-2 text-sm"><span><b>{w.day}</b> - {fmtTime(w.start)} to {fmtTime(w.end)}</span>
-                <span className="flex gap-1"><button className="btn-ghost btn-sm" onClick={() => setEdit(w)} aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button><button className="btn-ghost btn-sm text-bad" onClick={() => remove(w)} aria-label="Remove"><Trash2 className="h-3.5 w-3.5" /></button></span></li>))}
-              {me.availability.length === 0 && <li className="text-sm text-muted">No consultation hours yet. Patients cannot book you.</li>}</ul>
+
+          <div className="card p-4 sm:p-5">
+            <h2 className="mb-3 font-display text-base sm:text-lg font-semibold">Current Windows</h2>
+            <ul className="space-y-2">
+              {[...me.availability]
+                .sort(
+                  (a, b) =>
+                    WEEKDAYS.indexOf(a.day) - WEEKDAYS.indexOf(b.day) || toMin(a.start) - toMin(b.start)
+                )
+                .map((w) => (
+                  <li
+                    key={w.id}
+                    className="flex items-center justify-between gap-2 rounded-xl border border-line/40 bg-primary/5 p-2.5 sm:px-3 sm:py-2 text-xs sm:text-sm"
+                  >
+                    <span className="min-w-0 flex-1 truncate">
+                      <b className="font-semibold text-primary">{w.day}</b>{" "}
+                      <span className="text-muted mx-1">•</span> {fmtTime(w.start)} – {fmtTime(w.end)}
+                    </span>
+                    <span className="flex gap-1 shrink-0">
+                      <button
+                        className="btn-ghost btn-sm h-8 w-8 p-0 grid place-items-center rounded-lg"
+                        onClick={() => setEdit(w)}
+                        aria-label="Edit"
+                        title="Edit window"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        className="btn-ghost btn-sm h-8 w-8 p-0 grid place-items-center rounded-lg text-bad hover:bg-bad/10"
+                        onClick={() => remove(w)}
+                        aria-label="Remove"
+                        title="Remove window"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              {me.availability.length === 0 && (
+                <li className="text-xs sm:text-sm text-muted p-3 text-center rounded-xl bg-surface-2/40">
+                  No consultation hours configured yet.
+                </li>
+              )}
+            </ul>
           </div>
         </div>
-        <div className="card p-5 lg:col-span-3">
-          <h2 className="font-display text-lg font-semibold">Slot overview</h2><p className="mb-3 text-xs text-muted">Booked and open slots for a selected date.</p>
-          <div className="mb-4 flex gap-2 overflow-x-auto pb-2">{days.map((d) => <button key={d} onClick={() => setDate(d)} className={`shrink-0 rounded-xl border px-3 py-2 text-center text-xs ${date === d ? "border-primary bg-primary text-primary-fg" : "border-line/60 hover:border-primary"}`}><span className="block font-semibold">{weekdayOf(d)}</span>{d.slice(8)}/{d.slice(5, 7)}</button>)}</div>
-          <p className="mb-2 text-sm font-semibold">{fmtDate(date)} ({weekdayOf(date)})</p>
-          {slots.length === 0 ? <p className="text-sm text-muted">No consultation hours on this day.</p> : (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{slots.map((s) => {
-              const ap = data.appointments.find((a) => a.doctorId === me.id && a.date === date && a.time === s.time && ["pending", "approved", "completed"].includes(a.status));
-              return <div key={s.time} className={`rounded-xl border px-3 py-2 text-xs ${s.state === "booked" ? "border-warn/40 bg-warn/10" : s.state === "past" ? "border-line/30 opacity-50" : "border-ok/40 bg-ok/10"}`}><p className="font-semibold">{fmtTime(s.time)}</p><p className="truncate text-muted">{s.state === "booked" ? `Booked - ${ap?.guestDetails?.name || patientById(ap?.patientId ?? "")?.name || "Patient"}` : s.state === "past" ? "Passed" : "Open"}</p></div>;
-            })}</div>)}
+
+        {/* Right Column: Slot Overview */}
+        <div className="card p-4 sm:p-5 lg:col-span-7 xl:col-span-7">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
+            <div>
+              <h2 className="font-display text-base sm:text-lg font-semibold">Slot Overview</h2>
+              <p className="text-xs text-muted">Real-time breakdown of booked and open slots for the selected date.</p>
+            </div>
+            <div className="flex items-center gap-3 text-[11px] text-muted shrink-0 pt-1 sm:pt-0">
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-ok" /> Open</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-warn" /> Booked</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-muted/60" /> Passed</span>
+            </div>
+          </div>
+
+          {/* Date Picker Horizontal Carousel */}
+          <div className="mb-4 flex gap-2 overflow-x-auto pb-2 scrollbar-thin -mx-1 px-1 sm:mx-0">
+            {days.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDate(d)}
+                className={`shrink-0 rounded-xl border px-3 py-2 text-center text-xs transition min-w-[62px] sm:min-w-[68px] ${
+                  date === d
+                    ? "border-primary bg-primary text-primary-fg shadow-glow font-bold"
+                    : "border-line/60 hover:border-primary hover:bg-surface-2/60"
+                }`}
+              >
+                <span className="block font-semibold text-[11px] sm:text-xs uppercase tracking-wider">{weekdayOf(d)}</span>
+                <span className="text-xs">{d.slice(8)}/{d.slice(5, 7)}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mb-3 flex items-center justify-between border-b border-line/40 pb-2">
+            <p className="text-xs sm:text-sm font-semibold">
+              {fmtDate(date)} <span className="text-muted font-normal">({weekdayOf(date)})</span>
+            </p>
+            <span className="text-xs text-muted">
+              {slots.filter((s) => s.state === "free").length} slots free
+            </span>
+          </div>
+
+          {slots.length === 0 ? (
+            <div className="p-8 text-center rounded-2xl bg-surface-2/30 border border-line/40">
+              <p className="text-sm text-muted">No consultation hours configured on {weekdayOf(date)}.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-2 sm:gap-2.5">
+              {slots.map((s) => {
+                const ap = data.appointments.find(
+                  (a) =>
+                    a.doctorId === me.id &&
+                    a.date === date &&
+                    a.time === s.time &&
+                    ["pending", "approved", "completed"].includes(a.status)
+                );
+                const patientName = ap?.guestDetails?.name || patientById(ap?.patientId ?? "")?.name || "Patient";
+                return (
+                  <div
+                    key={s.time}
+                    className={`rounded-xl border p-2.5 text-xs transition flex flex-col justify-between ${
+                      s.state === "booked"
+                        ? "border-warn/40 bg-warn/10 text-warn-fg"
+                        : s.state === "past"
+                        ? "border-line/30 opacity-60 bg-surface-2/20"
+                        : "border-ok/40 bg-ok/10 text-ok-fg"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="font-bold text-xs sm:text-sm">{fmtTime(s.time)}</p>
+                      <span
+                        className={`h-2 w-2 rounded-full shrink-0 ${
+                          s.state === "booked" ? "bg-warn" : s.state === "past" ? "bg-muted" : "bg-ok"
+                        }`}
+                      />
+                    </div>
+                    <p className="truncate text-muted text-[11px] mt-1" title={s.state === "booked" ? `Booked: ${patientName}` : undefined}>
+                      {s.state === "booked" ? `Booked • ${patientName}` : s.state === "past" ? "Passed" : "Open Slot"}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
-      <Modal open={!!edit} onClose={() => setEdit(null)} title="Edit consultation hours">
-        {edit && <div className="space-y-3">
-          <div><label className="label" htmlFor="e-day">Day</label><select id="e-day" className="input" value={edit.day} onChange={(e) => setEdit({ ...edit, day: e.target.value as Weekday })}>{WEEKDAYS.map((d) => <option key={d}>{d}</option>)}</select></div>
-          <div className="grid grid-cols-2 gap-3"><div><label className="label" htmlFor="e-s">From</label><input id="e-s" type="time" className="input" value={edit.start} onChange={(e) => setEdit({ ...edit, start: e.target.value })} /></div><div><label className="label" htmlFor="e-e">To</label><input id="e-e" type="time" className="input" value={edit.end} onChange={(e) => setEdit({ ...edit, end: e.target.value })} /></div></div>
-          <button className="btn-primary w-full" onClick={saveEdit}>Save changes</button></div>}
+
+      {/* Modal: Edit Window */}
+      <Modal open={!!edit} onClose={() => setEdit(null)} title="Edit Consultation Hours">
+        {edit && (
+          <div className="space-y-3.5">
+            <div>
+              <label className="label text-xs sm:text-sm" htmlFor="e-day">
+                Day of Week
+              </label>
+              <select
+                id="e-day"
+                className="input text-xs sm:text-sm"
+                value={edit.day}
+                onChange={(e) => setEdit({ ...edit, day: e.target.value as Weekday })}
+              >
+                {WEEKDAYS.map((d) => (
+                  <option key={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              <div>
+                <label className="label text-xs sm:text-sm" htmlFor="e-s">
+                  From (Start)
+                </label>
+                <input
+                  id="e-s"
+                  type="time"
+                  className="input text-xs sm:text-sm"
+                  value={edit.start}
+                  onChange={(e) => setEdit({ ...edit, start: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="label text-xs sm:text-sm" htmlFor="e-e">
+                  To (End)
+                </label>
+                <input
+                  id="e-e"
+                  type="time"
+                  className="input text-xs sm:text-sm"
+                  value={edit.end}
+                  onChange={(e) => setEdit({ ...edit, end: e.target.value })}
+                />
+              </div>
+            </div>
+            <button className="btn-primary w-full text-xs sm:text-sm mt-2" onClick={saveEdit}>
+              Save Changes
+            </button>
+          </div>
+        )}
       </Modal>
     </>
   );

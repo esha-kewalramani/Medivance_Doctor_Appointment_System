@@ -156,7 +156,7 @@ export default function SplashScreen() {
       {/* Skip Button */}
       <button
         onClick={skip}
-        className="group absolute right-5 top-5 z-30 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-[#030d22]/85 px-4 py-2 text-xs font-semibold text-white/95 shadow-xl backdrop-blur-md transition-all hover:border-sky-400/70 hover:bg-[#07193f] sm:right-8 sm:top-6"
+        className="group absolute right-3 top-[max(0.75rem,env(safe-area-inset-top,0.75rem))] sm:right-6 sm:top-6 z-30 inline-flex items-center gap-1 sm:gap-1.5 rounded-full border border-white/25 bg-[#030d22]/85 px-3 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-semibold text-white/95 shadow-xl backdrop-blur-md transition-all hover:border-sky-400/70 hover:bg-[#07193f]"
         aria-label="Skip to Homepage"
       >
         <span>Skip</span>
@@ -299,8 +299,6 @@ function ScreenOne() {
           ))}
         </svg>
 
-        <div className="sp1-beam" />
-
         <div className="sp1-logo">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -327,7 +325,6 @@ const PILLS = [
   { label: "Find Doctors", icon: Stethoscope },
   { label: "Track Location", icon: MapPin },
   { label: "Book Appointments", icon: Calendar },
-  { label: "Manage Health", icon: Heart },
 ];
 
 function ScreenTwo() {
@@ -353,64 +350,74 @@ function ScreenTwo() {
   }, []);
 
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 flex flex-col justify-between overflow-hidden">
+      {/* Background Hospital Hero Image with responsive focal point */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/splash/splash-ultra-hd.jpg"
         alt="MEDIVANCE Medical Center"
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        className="absolute inset-0 h-full w-full object-cover object-[center_32%] sm:object-center select-none"
         style={{
           animation: `sp-zoom ${SCREEN2_MS}ms ease-out both`,
           filter: "contrast(1.05) saturate(1.1)",
         }}
       />
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#020817]/85 via-transparent to-[#020817]/40" />
+      {/* Atmospheric Vignette & Contrast Gradients */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#020817]/95 via-[#020817]/25 to-[#020817]/50" />
 
-      <div className="absolute inset-x-0 bottom-36 z-20 flex flex-col items-center px-4 text-center sm:bottom-40">
-        <div className="flex max-w-2xl flex-wrap items-center justify-center gap-2 sm:gap-3">
+      {/* Top Spacer to prevent any collision with top notch / skip button */}
+      <div className="relative z-10 h-14 sm:h-20 shrink-0" />
+
+      {/* Responsive Unified Bottom HUD (Pills + Progress Bar) */}
+      <div className="relative z-20 flex flex-col items-center justify-end px-4 pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] pt-2 sm:pb-8">
+        {/* Floating Quick Action Pills */}
+        <div className="mb-4 sm:mb-6 flex w-full max-w-xl flex-wrap items-center justify-center gap-2 sm:gap-3">
           {PILLS.map(({ label, icon: Icon }, i) => (
             <div
               key={label}
-              className="inline-flex items-center gap-2 rounded-full border border-sky-400 bg-sky-500/25 px-3.5 py-1.5 text-xs font-semibold text-white backdrop-blur-md"
+              className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-sky-400/80 bg-sky-950/70 px-3 py-1.5 sm:px-4 sm:py-2 text-[11px] sm:text-xs font-semibold text-white shadow-lg shadow-sky-950/40 backdrop-blur-md transition hover:scale-105"
               style={{
-                animation: `sp-pill .5s ${0.5 + i * 0.5}s ease-out both, sp-light .4s ${0.5 + i * 0.5}s ease-out both`,
+                animation: `sp-pill .5s ${0.35 + i * 0.25}s ease-out both, sp-light .4s ${0.35 + i * 0.25}s ease-out both`,
               }}
             >
-              <Icon className="h-3.5 w-3.5 text-sky-300" />
-              <span>{label}</span>
+              <Icon className="h-3.5 w-3.5 text-sky-300 shrink-0" />
+              <span className="whitespace-nowrap">{label}</span>
             </div>
           ))}
         </div>
-      </div>
 
-      <div className="absolute inset-x-0 bottom-6 z-20 mx-auto max-w-md px-6 sm:bottom-10">
-        <div className="flex items-center justify-between pb-2 text-xs font-medium text-sky-200/95">
-          <span className="flex items-center gap-2">
-            <Activity className="h-3.5 w-3.5 animate-pulse text-sky-400" />
-            {progress < 60
-              ? "Connecting Healthcare Network..."
-              : "Welcome to MEDIVANCE"}
-          </span>
+        {/* Loading Progress HUD */}
+        <div className="w-full max-w-md px-2 sm:px-4">
+          <div className="flex items-center justify-between pb-1.5 sm:pb-2 text-[11px] sm:text-xs font-medium text-sky-200/95">
+            <span className="flex items-center gap-1.5 sm:gap-2 truncate mr-2">
+              <Activity className="h-3.5 w-3.5 shrink-0 animate-pulse text-sky-400" />
+              <span className="truncate">
+                {progress < 60
+                  ? "Connecting Healthcare Network..."
+                  : "Welcome to MEDIVANCE"}
+              </span>
+            </span>
 
-          <span className="font-mono font-bold text-sky-300">
-            {progress}%
-          </span>
+            <span className="font-mono font-bold text-sky-300 shrink-0">
+              {progress}%
+            </span>
+          </div>
+
+          <div className="h-2 w-full overflow-hidden rounded-full border border-sky-400/40 bg-[#010918]/90 p-[1px] shadow-[0_0_15px_rgba(56,189,248,0.3)]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-sky-500 via-cyan-400 to-blue-400 transition-[width] duration-75"
+              style={{
+                width: `${progress}%`,
+                boxShadow: "0 0 14px #38bdf8",
+              }}
+            />
+          </div>
+
+          <p className="mt-1.5 sm:mt-2 text-center text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-sky-300/80">
+            Loading Your Healthier Tomorrow...
+          </p>
         </div>
-
-        <div className="h-2 w-full overflow-hidden rounded-full border border-sky-400/40 bg-[#010918]/90 p-[1px]">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-sky-500 via-cyan-400 to-blue-400"
-            style={{
-              width: `${progress}%`,
-              boxShadow: "0 0 14px #38bdf8",
-            }}
-          />
-        </div>
-
-        <p className="mt-2 text-center text-[11px] font-medium uppercase tracking-wider text-sky-300/80">
-          Loading Your Healthier Tomorrow...
-        </p>
       </div>
     </div>
   );
