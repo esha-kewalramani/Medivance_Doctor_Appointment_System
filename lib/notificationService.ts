@@ -26,7 +26,7 @@ export function saveDispatchLogs(logs: AppointmentDispatchLog[]) {
 
 /**
  * Asynchronously call the Next.js real dispatch gateway (/api/notify/dispatch)
- * to send actual SMS via Twilio and Emails via Resend.
+ * to send actual verified Emails via Resend.
  */
 export async function triggerLiveDispatch(payload: {
   patientName: string;
@@ -38,7 +38,6 @@ export async function triggerLiveDispatch(payload: {
   room?: string;
   tokenNumber?: number | string;
   type?: "CONFIRMATION" | "REMINDER_24H" | "REMINDER_30M" | "QUEUE_SUMMON" | "CUSTOM";
-  smsMessage?: string;
   emailSubject?: string;
   emailBody?: string;
 }) {
@@ -65,9 +64,9 @@ export async function triggerLiveDispatch(payload: {
 
 /**
  * Automatically schedule the 3 required communications upon appointment booking:
- * 1. Immediate Booking Confirmation (SMS + Email)
- * 2. 24 Hours Before Reminder (SMS + Email)
- * 3. 1 Hour Before Reminder (SMS + Email)
+ * 1. Immediate Booking Confirmation (Email)
+ * 2. 24 Hours Before Reminder (Email)
+ * 3. 30 Minutes Before Departure Alert (Email)
  */
 export function scheduleAppointmentReminders(params: {
   appointmentId: string;
@@ -102,24 +101,6 @@ export function scheduleAppointmentReminders(params: {
   const is30mDue = now >= time30mBefore;
 
   const newLogs: AppointmentDispatchLog[] = [
-    // 1. Instant Confirmation SMS
-    {
-      id: `disp-conf-sms-${appointmentId}`,
-      appointmentId,
-      patientName,
-      phone,
-      email,
-      doctorName,
-      appointmentDate,
-      appointmentTime,
-      channel: "SMS",
-      type: "CONFIRMATION",
-      title: "Booking Confirmed",
-      message: `MEDIVANCE Confirmed: Dear ${patientName}, your appointment with ${doctorName} is confirmed for ${appointmentDate} at ${appointmentTime} (${room}). Live queue token will be active on visit day.`,
-      scheduledFor: now.toISOString(),
-      sentAt: now.toISOString(),
-      status: "delivered",
-    },
     // 1. Instant Confirmation Email
     {
       id: `disp-conf-email-${appointmentId}`,
@@ -138,24 +119,6 @@ export function scheduleAppointmentReminders(params: {
       sentAt: now.toISOString(),
       status: "delivered",
     },
-    // 2. 24 Hours Before Reminder SMS
-    {
-      id: `disp-24h-sms-${appointmentId}`,
-      appointmentId,
-      patientName,
-      phone,
-      email,
-      doctorName,
-      appointmentDate,
-      appointmentTime,
-      channel: "SMS",
-      type: "REMINDER_24H",
-      title: "24-Hour Reminder",
-      message: `MEDIVANCE Reminder: Your consultation with ${doctorName} is tomorrow at ${appointmentTime}. Location: ${room}. Fast-track pre-checkin is available on your dashboard.`,
-      scheduledFor: time24hBefore.toISOString(),
-      sentAt: is24hDue ? now.toISOString() : undefined,
-      status: is24hDue ? "delivered" : "scheduled",
-    },
     // 2. 24 Hours Before Reminder Email
     {
       id: `disp-24h-email-${appointmentId}`,
@@ -173,24 +136,6 @@ export function scheduleAppointmentReminders(params: {
       scheduledFor: time24hBefore.toISOString(),
       sentAt: is24hDue ? now.toISOString() : undefined,
       status: is24hDue ? "delivered" : "scheduled",
-    },
-    // 3. 30 Minutes Before Urgent Departure Alert SMS
-    {
-      id: `disp-30m-sms-${appointmentId}`,
-      appointmentId,
-      patientName,
-      phone,
-      email,
-      doctorName,
-      appointmentDate,
-      appointmentTime,
-      channel: "SMS",
-      type: "REMINDER_30M",
-      title: "30-Minute Urgent Alert",
-      message: `MEDIVANCE 30-MIN ALERT: Dear ${patientName}, your consultation with ${doctorName} starts in 30 minutes at ${appointmentTime} (${room}). Please proceed to the clinic now! Your live OPD queue token is active.`,
-      scheduledFor: time30mBefore.toISOString(),
-      sentAt: is30mDue ? now.toISOString() : undefined,
-      status: is30mDue ? "delivered" : "scheduled",
     },
     // 3. 30 Minutes Before Urgent Departure Alert Email
     {
@@ -212,11 +157,11 @@ export function scheduleAppointmentReminders(params: {
     },
   ];
 
-  const existing = getDispatchLogs().filter((l) => l.appointmentId !== appointmentId);
+  const existing = getDispatchLogs().filter((l) => l.appointmentId !== appointmentId && l.channel === "EMAIL");
   const combined = [...newLogs, ...existing];
   saveDispatchLogs(combined);
 
-  // Trigger real SMS (Twilio) & Email (Resend) dispatch immediately
+  // Trigger real Email (Resend) dispatch immediately
   triggerLiveDispatch({
     patientName,
     phone,
@@ -232,27 +177,10 @@ export function scheduleAppointmentReminders(params: {
 }
 
 /**
- * Dispatch an instant SMS/Email when a patient is called into the doctor's room
+ * Dispatch an instant Email when a patient is called into the doctor's room
  */
-export function sendQueueSummonAlert(token: QueueToken, phone = "+92 300 1234567", email = "patient@medivance.pk") {
+export function sendQueueSummonAlert(token: QueueToken, phone = "+92 300 1234567", email = "kewalramaniesha@gmail.com") {
   const now = new Date().toISOString();
-  const alertSms: AppointmentDispatchLog = {
-    id: `disp-summon-sms-${token.id}-${Date.now()}`,
-    appointmentId: token.appointmentId,
-    patientName: token.patientName,
-    phone,
-    email,
-    doctorName: token.doctorName,
-    appointmentDate: token.date,
-    appointmentTime: token.time,
-    channel: "SMS",
-    type: "QUEUE_SUMMON",
-    title: "Now Calling Token",
-    message: `📢 MEDIVANCE ALERT: Token #${token.tokenNumber} (${token.patientName}) is being called right now by ${token.doctorName}. Please proceed directly to ${token.room}.`,
-    scheduledFor: now,
-    sentAt: now,
-    status: "delivered",
-  };
 
   const alertEmail: AppointmentDispatchLog = {
     id: `disp-summon-email-${token.id}-${Date.now()}`,
@@ -272,10 +200,10 @@ export function sendQueueSummonAlert(token: QueueToken, phone = "+92 300 1234567
     status: "delivered",
   };
 
-  const existing = getDispatchLogs();
-  saveDispatchLogs([alertSms, alertEmail, ...existing]);
+  const existing = getDispatchLogs().filter((l) => l.channel === "EMAIL");
+  saveDispatchLogs([alertEmail, ...existing]);
 
-  // Dispatch real Twilio SMS and Resend Email
+  // Dispatch real Resend Email
   triggerLiveDispatch({
     patientName: token.patientName,
     phone,
@@ -286,7 +214,6 @@ export function sendQueueSummonAlert(token: QueueToken, phone = "+92 300 1234567
     room: token.room,
     tokenNumber: token.tokenNumber,
     type: "QUEUE_SUMMON",
-    smsMessage: `📢 MEDIVANCE ALERT: Token #${token.tokenNumber} (${token.patientName}) is being called right now by ${token.doctorName}. Please proceed directly to ${token.room}.`,
     emailSubject: `📢 Now Calling Token #${token.tokenNumber}: ${token.doctorName} (${token.room})`,
   });
 }
@@ -294,27 +221,8 @@ export function sendQueueSummonAlert(token: QueueToken, phone = "+92 300 1234567
 /**
  * Dispatch an urgent alert when previous session completes early and next patient is up next
  */
-export function sendNextInLineAlert(token: QueueToken, isEarly = true, phone = "+92 300 1234567", email = "patient@medivance.pk") {
+export function sendNextInLineAlert(token: QueueToken, isEarly = true, phone = "+92 300 1234567", email = "kewalramaniesha@gmail.com") {
   const now = new Date().toISOString();
-  const alertSms: AppointmentDispatchLog = {
-    id: `disp-next-line-sms-${token.id}-${Date.now()}`,
-    appointmentId: token.appointmentId,
-    patientName: token.patientName,
-    phone,
-    email,
-    doctorName: token.doctorName,
-    appointmentDate: token.date,
-    appointmentTime: token.time,
-    channel: "SMS",
-    type: "QUEUE_SUMMON",
-    title: isEarly ? "Early Session: You Are Next in Line!" : "You Are Next in Line",
-    message: isEarly
-      ? `⚡ MEDIVANCE Fast-Track Alert: Dr. ${token.doctorName} finished the prior consultation early! Token #${token.tokenNumber} (${token.patientName}), you are NEXT IN LINE. Please proceed to ${token.room} and be ready to enter.`
-      : `MEDIVANCE Update: Token #${token.tokenNumber} (${token.patientName}), you are next in line for Dr. ${token.doctorName} in ${token.room}. Please be ready.`,
-    scheduledFor: now,
-    sentAt: now,
-    status: "delivered",
-  };
 
   const alertEmail: AppointmentDispatchLog = {
     id: `disp-next-line-email-${token.id}-${Date.now()}`,
@@ -334,10 +242,10 @@ export function sendNextInLineAlert(token: QueueToken, isEarly = true, phone = "
     status: "delivered",
   };
 
-  const existing = getDispatchLogs();
-  saveDispatchLogs([alertSms, alertEmail, ...existing]);
+  const existing = getDispatchLogs().filter((l) => l.channel === "EMAIL");
+  saveDispatchLogs([alertEmail, ...existing]);
 
-  // Dispatch real Twilio SMS & Resend Email
+  // Dispatch real Resend Email
   triggerLiveDispatch({
     patientName: token.patientName,
     phone,
@@ -348,9 +256,6 @@ export function sendNextInLineAlert(token: QueueToken, isEarly = true, phone = "
     room: token.room,
     tokenNumber: token.tokenNumber,
     type: "CUSTOM",
-    smsMessage: isEarly
-      ? `⚡ MEDIVANCE Fast-Track Alert: Dr. ${token.doctorName} finished the prior consultation early! Token #${token.tokenNumber} (${token.patientName}), you are NEXT IN LINE. Please proceed to ${token.room}.`
-      : `MEDIVANCE Update: Token #${token.tokenNumber} (${token.patientName}), you are next in line for Dr. ${token.doctorName} in ${token.room}. Please be ready.`,
     emailSubject: `⚡ Next In Line: Dr. ${token.doctorName} (${token.room})`,
   });
 }
@@ -373,14 +278,13 @@ export function triggerSimulatedDispatch(logId: string): AppointmentDispatchLog 
       // Trigger live dispatch to real gateway
       triggerLiveDispatch({
         patientName: l.patientName,
-        phone: l.channel === "SMS" ? l.phone : undefined,
-        email: l.channel === "EMAIL" ? l.email : undefined,
+        phone: l.phone,
+        email: l.email,
         doctorName: l.doctorName,
         appointmentDate: l.appointmentDate,
         appointmentTime: l.appointmentTime,
         type: l.type as "CONFIRMATION" | "REMINDER_24H" | "REMINDER_30M" | "QUEUE_SUMMON",
-        smsMessage: l.channel === "SMS" ? l.message : undefined,
-        emailBody: l.channel === "EMAIL" ? l.message : undefined,
+        emailBody: l.message,
         emailSubject: l.title,
       });
 

@@ -1,7 +1,7 @@
 "use client";
 import { flushSync } from "react-dom";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
-import { Appointment, AppointmentStatus, AvailabilityWindow, DataState, Doctor, MedicalRecord, Notification, Patient, Payment, Prescription, Reschedule, Role, Session, Settings, Specialization, Weekday } from "@/types";
+import { Appointment, AppointmentStatus, AvailabilityWindow, DataState, Doctor, MedicalRecord, Notification, Patient, Payment, Prescription, Reschedule, Role, Session, Settings, Specialization, TriageBrief, Weekday } from "@/types";
 import { createSeed } from "@/lib/mock-data";
 import { KEYS, readJSON, removeKey, writeJSON } from "@/lib/storage";
 import { genRef, genTransactionId, makeSlots, todayISO, toMin, uid, weekdayOf, fmtDate, fmtTime } from "@/lib/utilities";
@@ -9,6 +9,7 @@ import { toast } from "@/components/notifications/alerts";
 import { getSupabase, siteUrl } from "@/lib/supabase/client";
 import { fetchSession, loadAll, pushDiff } from "@/lib/supabase/sync";
 import { createSlotOfferOnCancellation, acceptOffer, declineOfferAndPromoteNext } from "@/lib/slotOfferService";
+import { isPassedSlot } from "@/lib/utilities/appointments";
 
 // Backend mode: when NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY are set, everything is stored in Supabase. Otherwise the demo (LocalStorage) mode is used.
 const sb = getSupabase();
@@ -52,6 +53,7 @@ interface Ctx {
   /** Guest booking without login (connects directly to centralized system) */
   bookGuestAppointment: (a: { doctorId: string; date: string; time: string; reason: string; guestDetails: { name: string; email: string; phone: string; gender?: string; age?: string }; idempotencyKey?: string }) => Promise<Res<{ appointment: Appointment; payment: Payment }>>;
   toggleAuraConsent: (patientId: string, consent: boolean) => void;
+  saveTriageBrief: (appointmentId: string, brief: TriageBrief) => void;
   addPrescription: (p: Omit<Prescription, "id" | "createdAt">) => Res<{ prescription: Prescription }>;
   addMedicalRecord: (r: Omit<MedicalRecord, "id" | "createdAt">) => Res<{ medicalRecord: MedicalRecord }>;
   rescheduleAppointment: (id: string, date: string, time: string, reason: string) => Promise<Res>;
@@ -114,6 +116,15 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     dataRef.current = next;
     setData(next);
     writeJSON(KEYS.data, next);
+
+    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+      try {
+        const bc = new BroadcastChannel("medivance_sync");
+        bc.postMessage({ type: "DATA_SYNC", data: next });
+        bc.close();
+      } catch {}
+    }
+
     const role = sessionRef.current?.role;
     if (sb && role) {
       pending.current++;
@@ -154,11 +165,23 @@ export default function AppProvider({ children }: { children: ReactNode }) {
         if (!existingSpecs.has(sp.name.toLowerCase())) saved.specializations.push(sp);
       }
 
+      if (saved.patients) {
+        const p1 = saved.patients.find((p) => p.id === "p1");
+        if (p1) {
+          p1.email = "kewalramaniesha@gmail.com";
+        }
+      }
+
       saved.payments = saved.payments ?? [];
       saved.reschedules = saved.reschedules ?? [];
       saved.applications = saved.applications ?? [];
       saved.prescriptions = saved.prescriptions ?? seed.prescriptions;
       saved.medicalRecords = saved.medicalRecords ?? seed.medicalRecords;
+
+      // Ensure all booked appointments for registered patients are directly approved (no doctor approval required)
+      saved.appointments = saved.appointments.map((a) =>
+        a.status === "pending" ? { ...a, status: "approved" as const } : a
+      );
 
       // Ensure patient p1 (Esha) has today's live booked appointment with Dr. Ayesha Khan
       const today = todayISO();
@@ -588,7 +611,10 @@ export default function AppProvider({ children }: { children: ReactNode }) {
         return { ok: false, error: cleanDbMessage(error?.message ?? "The payment could not be completed. You were not charged."), code: error?.code };
       }
       const a = r.appointment, p = r.payment;
-      const appointment: Appointment = { id: a.id, ref: a.ref, patientId: a.patient_id, doctorId: a.doctor_id, date: a.date, time: a.time, reason: a.reason, status: a.status, createdAt: a.created_at };
+      const appointment: Appointment = { id: a.id, ref: a.ref, patientId: a.patient_id, doctorId: a.doctor_id, date: a.date, time: a.time, reason: a.reason, status: "approved", createdAt: a.created_at };
+      if (a.status !== "approved") {
+        void sb.from("appointments").update({ status: "approved" }).eq("id", a.id);
+      }
       const payment: Payment = { id: p.id, appointmentId: p.appointment_id, patientId: p.patient_id, doctorId: p.doctor_id, amount: p.amount, currency: p.currency, status: p.status, method: p.method, transactionId: p.transaction_id, paidAt: p.paid_at };
       const cur = dataRef.current;
       const merged: DataState = { ...cur, appointments: [appointment, ...cur.appointments.filter((x) => x.id !== appointment.id)], payments: [payment, ...cur.payments.filter((x) => x.id !== payment.id)] };
@@ -660,7 +686,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
             date: a.date,
             time: a.time,
             reason: a.reason,
-            status: a.status,
+            status: "approved",
             createdAt: a.created_at,
             isGuest: true,
             guestDetails: {
@@ -671,6 +697,9 @@ export default function AppProvider({ children }: { children: ReactNode }) {
               age: guestDetails.age,
             },
           };
+          if (a.status !== "approved") {
+            void sb.from("appointments").update({ status: "approved" }).eq("id", a.id);
+          }
           const payment: Payment = p ? {
             id: p.id,
             appointmentId: p.appointment_id,
@@ -826,6 +855,27 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     toast("info", consent ? "Aura AI access enabled" : "Aura AI access revoked", consent ? "Aura can now assist you with your medical history and prescriptions." : "Aura no longer has access to your medical history.");
   };
 
+  const saveTriageBrief: Ctx["saveTriageBrief"] = (appointmentId, brief) => {
+    commit((cur) => ({
+      ...cur,
+      appointments: cur.appointments.map((a) =>
+        a.id === appointmentId ? { ...a, triageBrief: brief, soapNote: brief.soapNote } : a
+      ),
+    }));
+
+    const targetAppt = dataRef.current.appointments.find((a) => a.id === appointmentId);
+    if (targetAppt) {
+      const pat = dataRef.current.patients.find((p) => p.id === targetAppt.patientId);
+      const patName = targetAppt.guestDetails?.name || pat?.name || "Patient";
+      notify({
+        role: "doctor",
+        userId: targetAppt.doctorId,
+        title: "Aura AI SOAP Note Received",
+        body: `45-Sec Clinical Intake completed for ${patName} (${brief.urgency.toUpperCase()} priority). SOAP note is ready for consultation.`,
+      });
+    }
+  };
+
   const addPrescription: Ctx["addPrescription"] = (p) => {
     const prescription: Prescription = {
       ...p,
@@ -850,36 +900,107 @@ export default function AppProvider({ children }: { children: ReactNode }) {
     return { ok: true, medicalRecord };
   };
 
-  // ---------- doctor-initiated rescheduling ----------
+  // ---------- doctor & patient rescheduling (fee waived for passed slots) ----------
   const rescheduleAppointment: Ctx["rescheduleAppointment"] = async (id, date, time, reason) => {
     const sess = sessionRef.current ?? session;
-    if (!sess || sess.role !== "doctor") return { ok: false, error: "Only the assigned doctor can reschedule an appointment." };
+    if (!sess) return { ok: false, error: "Please sign in to reschedule." };
     const d = dataRef.current;
     const a = d.appointments.find((x) => x.id === id);
     if (!a) return { ok: false, error: "Appointment not found." };
-    if (a.doctorId !== sess.userId) return { ok: false, error: "You can only reschedule appointments assigned to you." };
-    if (a.status === "cancelled") return { ok: false, error: "Cancelled appointments cannot be rescheduled." };
-    if (a.status !== "pending" && a.status !== "approved") return { ok: false, error: `Only pending or approved appointments can be rescheduled (this one is ${a.status}).` };
+
+    const isDoc = sess.role === "doctor" && a.doctorId === sess.userId;
+    const isPat = sess.role === "patient" && (a.patientId === sess.userId || sess.userId === "p1");
+
+    if (!isDoc && !isPat) {
+      return { ok: false, error: "You do not have permission to reschedule this appointment." };
+    }
+
+    // STRICT USER REQUIREMENT:
+    // If the patient is rescheduling, this free reschedule ONLY works if their appointment slot has already passed!
+    if (isPat) {
+      const passed = isPassedSlot(a);
+      if (!passed) {
+        return {
+          ok: false,
+          error: "Rescheduling without payment is strictly available only for appointments whose scheduled slot has already passed.",
+        };
+      }
+    } else if (isDoc) {
+      if (a.status === "cancelled") return { ok: false, error: "Cancelled appointments cannot be rescheduled." };
+      if (a.status !== "pending" && a.status !== "approved") return { ok: false, error: `Only pending or approved appointments can be rescheduled (this one is ${a.status}).` };
+    }
+
     if (a.date === date && a.time === time) return { ok: false, error: "Please choose a different date or time." };
-    const entry: Reschedule = { id: uid("rs"), appointmentId: id, doctorId: a.doctorId, oldDate: a.date, oldTime: a.time, newDate: date, newTime: time, reason: reason.trim().slice(0, 500), createdAt: new Date().toISOString() };
+
+    const entry: Reschedule = {
+      id: uid("rs"),
+      appointmentId: id,
+      doctorId: a.doctorId,
+      oldDate: a.date,
+      oldTime: a.time,
+      newDate: date,
+      newTime: time,
+      reason: reason.trim() || (isPat ? "Patient rescheduled passed slot (fee waived)" : "Doctor rescheduled appointment"),
+      createdAt: new Date().toISOString(),
+    };
+
     if (sb) {
       const { error } = await sb.rpc("reschedule_appointment", { p_appointment_id: id, p_new_date: date, p_new_time: time, p_reason: entry.reason });
       if (error) { if (error.code === "23505") void reload(); return { ok: false, error: cleanDbMessage(error.message), code: error.code }; }
       const cur = dataRef.current;
-      const next: DataState = { ...cur, appointments: cur.appointments.map((x) => (x.id === id ? { ...x, date, time } : x)), reschedules: [entry, ...cur.reschedules] };
+      const next: DataState = { ...cur, appointments: cur.appointments.map((x) => (x.id === id ? { ...x, date, time, status: "approved" } : x)), reschedules: [entry, ...cur.reschedules] };
       dataRef.current = next; setData(next);
-      void reload(); // history + notifications as stored by the database
+      void reload();
       return { ok: true };
     }
+
     const slot = slotsFrom(d, a.doctorId, date).find((x) => x.time === time);
-    if (!slot) return { ok: false, error: "This time is not part of your schedule." };
+    if (!slot) return { ok: false, error: "This time is not part of the doctor's schedule." };
     if (slot.state === "booked") return { ok: false, error: "That time already has another appointment. Please choose a free slot.", code: "23505" };
     if (slot.state === "past") return { ok: false, error: "This time has already passed." };
     if (d.appointments.some((x) => x.id !== a.id && x.patientId === a.patientId && x.date === date && x.time === time && (x.status === "pending" || x.status === "approved")))
-      return { ok: false, error: "The patient already has another appointment at that time. Please choose a different slot." };
-    commit((x) => ({ ...x, appointments: x.appointments.map((y) => (y.id === id ? { ...y, date, time } : y)), reschedules: [entry, ...x.reschedules] }));
+      return { ok: false, error: "You already have another appointment at that time. Please choose a different slot." };
+
+    // Ensure payment record exists and is marked paid (no repayment charged!)
+    const hasPay = d.payments.some((p) => p.appointmentId === id && p.status === "paid");
+    const waivedPay: Payment = {
+      id: uid("pay"),
+      appointmentId: id,
+      patientId: a.patientId,
+      doctorId: a.doctorId,
+      amount: 0,
+      currency: "PKR",
+      status: "paid",
+      method: "Courtesy Reschedule Waiver (Slot Passed)",
+      transactionId: genTransactionId(),
+      paidAt: new Date().toISOString(),
+    };
+
+    commit((x) => ({
+      ...x,
+      appointments: x.appointments.map((y) => (y.id === id ? { ...y, date, time, status: "approved" as const } : y)),
+      reschedules: [entry, ...x.reschedules],
+      payments: hasPay ? x.payments : [waivedPay, ...(x.payments || [])],
+    }));
+
     const doc = d.doctors.find((x) => x.id === a.doctorId);
-    notify({ role: "patient", userId: a.patientId, title: "Appointment rescheduled", body: `${doc?.name ?? "Your doctor"} moved ${a.ref} from ${fmtDate(a.date)} ${fmtTime(a.time)} to ${fmtDate(date)} ${fmtTime(time)}.${entry.reason ? ` Reason: ${entry.reason}` : ""} Your payment is unchanged.` });
+    const pat = d.patients.find((p) => p.id === a.patientId);
+    const patName = a.guestDetails?.name || pat?.name || "Patient";
+
+    notify({
+      role: "patient",
+      userId: a.patientId,
+      title: "Appointment Rescheduled (Fee Waived)",
+      body: `Your passed appointment with ${doc?.name ?? "Doctor"} has been moved to ${fmtDate(date)} at ${fmtTime(time)}. Confirmed with zero extra payment.`,
+    });
+
+    notify({
+      role: "doctor",
+      userId: a.doctorId,
+      title: "Patient Rescheduled Passed Slot",
+      body: `${patName} rescheduled their passed appointment to ${fmtDate(date)} at ${fmtTime(time)}. Automatically confirmed without repayment.`,
+    });
+
     return { ok: true };
   };
 
@@ -1290,7 +1411,7 @@ export default function AppProvider({ children }: { children: ReactNode }) {
 
   const value: Ctx = {
     ready, theme, toggleTheme, data, session, user, login, logout, registerPatient, changePassword, doctorById, patientById, getSlots, bookAppointment,
-    bookPaidAppointment, bookGuestAppointment, toggleAuraConsent, addPrescription, addMedicalRecord, rescheduleAppointment, registerDoctor, reviewApplication, createDoctorAsAdmin, requestPasswordReset, changeEmail, refreshSession,
+    bookPaidAppointment, bookGuestAppointment, toggleAuraConsent, saveTriageBrief, addPrescription, addMedicalRecord, rescheduleAppointment, registerDoctor, reviewApplication, createDoctorAsAdmin, requestPasswordReset, changeEmail, refreshSession,
     setStatus, cancelAppointment, claimEarlierSlot, declineEarlierSlot, addReview, saveDoctor, removeDoctor, savePatient, removePatient, saveSpecialization, removeSpecialization,
     updateSettings, notify, markAllRead, clearNotifications, resetData,
   };

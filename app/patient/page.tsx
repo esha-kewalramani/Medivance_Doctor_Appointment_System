@@ -25,8 +25,25 @@ export default function PatientDashboard() {
   const c = useChartColors();
   const me = data.patients.find((p) => p.id === session?.userId);
   const mine = useMemo(() => data.appointments.filter((a) => a.patientId === session?.userId), [data.appointments, session]);
-  const myPrescriptions = useMemo(() => (data.prescriptions || []).filter((p) => p.patientId === session?.userId), [data.prescriptions, session]);
-  const myRecords = useMemo(() => (data.medicalRecords || []).filter((m) => m.patientId === session?.userId), [data.medicalRecords, session]);
+  const myAppointmentIds = useMemo(() => new Set(mine.map((a) => a.id)), [mine]);
+  const myPrescriptions = useMemo(
+    () =>
+      (data.prescriptions || []).filter(
+        (p) =>
+          p.patientId === session?.userId ||
+          (p.appointmentId && myAppointmentIds.has(p.appointmentId))
+      ),
+    [data.prescriptions, session, myAppointmentIds]
+  );
+  const myRecords = useMemo(
+    () =>
+      (data.medicalRecords || []).filter(
+        (m) =>
+          m.patientId === session?.userId ||
+          (m.appointmentId && myAppointmentIds.has(m.appointmentId))
+      ),
+    [data.medicalRecords, session, myAppointmentIds]
+  );
   const [selectedRx, setSelectedRx] = useState<Prescription | null>(null);
 
   const today = todayISO();
@@ -70,7 +87,42 @@ export default function PatientDashboard() {
       {/* Real-Time Live Queue & Token Tracker */}
       <PatientLiveQueueCard />
 
-      {/* Automated SMS & Email Reminders Notification Monitor */}
+      {/* Prominent Recent Digital Prescription Notice (if issued by doctor) */}
+      {myPrescriptions.length > 0 && (
+        <section className="card border-2 border-emerald-500/40 bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-transparent p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:border dark:border-emerald-400/40 dark:text-emerald-300">
+                <Pill className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display font-bold text-base text-slate-900 dark:text-white">
+                    Doctor&apos;s Digital Prescription Issued
+                  </h3>
+                  <span className="badge border-emerald-400/40 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs">
+                    {myPrescriptions[0].rxNumber || "VERIFIED RX"}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-muted">
+                  Issued by <strong>{myPrescriptions[0].doctorName}</strong> on {fmtDate(myPrescriptions[0].date)} • {myPrescriptions[0].medications.length} medication{myPrescriptions[0].medications.length > 1 ? "s" : ""} prescribed.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedRx(myPrescriptions[0])}
+                className="btn btn-sm bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm inline-flex items-center gap-1.5"
+              >
+                <Printer className="h-3.5 w-3.5" /> View Digital Rx &amp; QR Slip
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Automated Email & 1-Click WhatsApp Reminders Notification Monitor */}
       <AutomatedRemindersCard />
 
       {/* Aura AI Consent & Privacy Card */}

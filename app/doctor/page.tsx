@@ -32,9 +32,9 @@ export default function DoctorDashboard() {
       <div className="flex items-center gap-3"><Avatar name={user?.name ?? "Doctor"} photo={user?.photo} size={64} /><div><p className="text-sm text-muted">Good day,</p><h1 className="font-display text-2xl font-bold sm:text-3xl">{user?.name}</h1></div></div>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Total" value={k.total} icon={CalendarCheck} />
-        <StatCard label="Pending requests" value={k.pending} icon={Clock} tone="warn" />
         <StatCard label="Approved" value={k.approved} icon={ThumbsUp} tone="ok" />
         <StatCard label="Completed" value={k.completed} icon={CheckCircle2} />
+        <StatCard label="Pending" value={k.pending} icon={Clock} tone="warn" />
         <StatCard label="Cancelled / rejected" value={k.cancelled + k.rejected} icon={Ban} tone="bad" />
       </div>
 

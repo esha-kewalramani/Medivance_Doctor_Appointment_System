@@ -51,7 +51,7 @@ export const DOCTORS: Doctor[] = [
 ];
 
 const P = (n: number, name: string, g: Patient["gender"], dob: string, city: string, back: number): Patient => ({
-  id: `p${n}`, name, email: n === 1 ? "patient@medivance.pk" : `patient${n}@mail.com`, phone: `+92 321 77${String(n).padStart(2, "0")}${200 + n * 11}`,
+  id: `p${n}`, name, email: n === 1 ? "kewalramaniesha@gmail.com" : `patient${n}@mail.com`, phone: `+92 321 77${String(n).padStart(2, "0")}${200 + n * 11}`,
   password: "Patient@123", dob, gender: g, address: `${city}, Sindh`, bloodGroup: ["A+", "B+", "O+", "AB+", "O-", "A-"][n % 6],
   registeredAt: addDays(todayISO(), -back) + "T09:00:00.000Z",
   isGuest: false,
@@ -82,7 +82,7 @@ function seedAppointments(doctors: Doctor[]): Appointment[] {
   const statusFor = (offset: number): AppointmentStatus => {
     const r = rnd();
     if (offset < 0) return r < 0.72 ? "completed" : r < 0.88 ? "cancelled" : "rejected";
-    return r < 0.45 ? "approved" : r < 0.85 ? "pending" : "cancelled";
+    return r < 0.85 ? "approved" : "cancelled";
   };
   let n = 0;
   for (let off = -28; off <= 10; off++) {
@@ -116,9 +116,9 @@ function seedAppointments(doctors: Doctor[]): Appointment[] {
     [-9, "completed", "09:00", "p1"],
     [-3, "cancelled", "09:30", "p1"],
     [2, "approved", "10:00", "p1"],
-    [4, "pending", "11:00", "p1"],
-    [5, "pending", "09:30", "p3"],
-    [1, "pending", "12:00", "p4"],
+    [4, "approved", "11:00", "p1"],
+    [5, "approved", "09:30", "p3"],
+    [1, "approved", "12:00", "p4"],
   ];
   extra.forEach(([off, status, time, pid], i) => {
     let date = addDays(today, off);

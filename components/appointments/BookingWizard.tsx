@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, CreditCard, Lock, MessageCircle, Receipt, Search, Smartphone, UserCheck, UserPlus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock, CreditCard, Lock, Mail, MessageCircle, Receipt, Search, Smartphone, UserCheck, UserPlus } from "lucide-react";
 import { formatWhatsAppNumber } from "@/lib/whatsapp/whatsapp";
 import Avatar from "@/components/ui/Avatar";
 import { useApp } from "@/hooks/useApp";
@@ -191,24 +191,24 @@ export default function BookingWizard() {
           <p className="mt-3 text-[11px] text-muted">Simulated payment for demonstration. No real money was deducted.</p>
         </div>
 
-        {/* Automated SMS & Email Reminders Status Block */}
+        {/* Automated Email Reminders Status Block */}
         <div className="mt-4 rounded-xl border border-emerald-400/50 bg-emerald-500/10 p-4 text-left text-xs">
           <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300">
-            <Smartphone className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Automated Patient Reminders Scheduled:</span>
+            <Mail className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Automated Patient Notifications Scheduled:</span>
           </div>
           <ul className="mt-2.5 space-y-1.5 text-slate-700 dark:text-slate-300 text-[11.5px]">
             <li className="flex items-center gap-2">
               <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-              <span>Instant Confirmation SMS & Email dispatched to <strong>{clientPhone || clientEmail}</strong></span>
+              <span>Instant Confirmation Email dispatched to <strong>{clientEmail}</strong></span>
             </li>
             <li className="flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-teal-600 dark:text-cyan-400 shrink-0" />
-              <span>Automated <strong>24-Hour Before Reminder</strong> scheduled</span>
+              <span>Automated <strong>24-Hour Before Consultation Reminder</strong></span>
             </li>
             <li className="flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-              <span>Automated <strong>30-Minute Urgent Departure Alert</strong> scheduled to <strong>{clientPhone}</strong></span>
+              <span>Automated <strong>30-Minute OPD Arrival Alert</strong></span>
             </li>
           </ul>
         </div>

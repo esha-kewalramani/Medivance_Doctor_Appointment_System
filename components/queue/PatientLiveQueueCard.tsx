@@ -1,12 +1,16 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import {
   Activity,
   Bell,
+  CalendarClock,
   CheckCircle2,
   Clock,
+  FileText,
   MapPin,
+  Pill,
+  Printer,
   Radio,
   Sparkles,
   Stethoscope,
@@ -14,15 +18,40 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useLiveQueue } from "@/hooks/useLiveQueue";
+import { useApp } from "@/hooks/useApp";
 import { fmtTime } from "@/lib/utilities";
 import { announcePatientCall, playHospitalChime, sendBrowserNotification } from "@/lib/audioAlert";
 import PatientTriageModal from "@/components/queue/PatientTriageModal";
+import PrescriptionViewModal from "@/components/prescriptions/PrescriptionViewModal";
+import RescheduleModal from "@/components/appointments/RescheduleModal";
+import { Appointment, Prescription, PrescriptionItem } from "@/types";
 
 export default function PatientLiveQueueCard() {
+  const { data, saveTriageBrief } = useApp();
   const { tokens, myToken, currentCallingToken, submitTriageBrief } = useLiveQueue();
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [notifGranted, setNotifGranted] = useState(false);
   const [triageOpen, setTriageOpen] = useState(false);
+  const [selectedRx, setSelectedRx] = useState<Prescription | null>(null);
+  const [reschedulingPassedAppt, setReschedulingPassedAppt] = useState<Appointment | null>(null);
+
+  const visitPrescription = useMemo(() => {
+    if (!myToken) return null;
+    return (data.prescriptions || []).find(
+      (p) =>
+        (myToken.appointmentId && p.appointmentId === myToken.appointmentId) ||
+        (p.patientId === myToken.patientId && p.doctorId === myToken.doctorId && p.date === myToken.date)
+    );
+  }, [data.prescriptions, myToken]);
+
+  const matchingAppt = useMemo(() => {
+    if (!myToken) return null;
+    return (data.appointments || []).find(
+      (a) =>
+        a.id === myToken.appointmentId ||
+        (a.patientId === myToken.patientId && a.doctorId === myToken.doctorId && a.date === myToken.date)
+    );
+  }, [data.appointments, myToken]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -192,6 +221,75 @@ export default function PatientLiveQueueCard() {
             </Link>
           </div>
         </div>
+
+        {/* DOCTOR ISSUED PRESCRIPTION CARD */}
+        {visitPrescription && (
+          <div className="mt-4 rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-cyan-500/5 to-transparent p-4 sm:p-5 dark:border-emerald-500/30 dark:bg-[#032025]/60 shadow-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-500/20">
+              <div className="flex items-center gap-2.5">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:border dark:border-emerald-400/40 dark:text-emerald-300">
+                  <Pill className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
+                      Digital Prescription Issued
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
+                      {visitPrescription.rxNumber || "VERIFIED RX"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Prescribed by {visitPrescription.doctorName} • Diagnosis: <strong className="text-emerald-700 dark:text-emerald-300">{visitPrescription.diagnosis || "Consultation Assessment"}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedRx(visitPrescription)}
+                className="inline-flex items-center gap-1.5 py-2 px-3.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition shadow-sm shrink-0"
+              >
+                <Printer className="h-3.5 w-3.5" /> View Official Slip &amp; QR
+              </button>
+            </div>
+
+            {/* Prescribed Medications Preview */}
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {visitPrescription.medications.map((m: PrescriptionItem, idx: number) => (
+                <div key={idx} className="rounded-xl border border-slate-200/80 bg-white/90 p-2.5 text-xs dark:border-emerald-500/20 dark:bg-[#03151f]/80">
+                  <p className="font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                    <span>{m.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 font-semibold">{m.dosage}</span>
+                  </p>
+                  <p className="text-slate-500 dark:text-slate-400 mt-1 text-[11px]">
+                    {m.frequency} • {m.duration}
+                  </p>
+                  {m.instructions && (
+                    <p className="text-teal-700 dark:text-cyan-400 text-[10.5px] mt-0.5 italic">
+                      Tip: {m.instructions}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {visitPrescription.instructions && (
+              <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 bg-white/70 dark:bg-slate-900/50 p-2.5 rounded-xl border border-slate-200/60 dark:border-emerald-500/20">
+                <strong className="text-slate-800 dark:text-slate-200">Doctor&apos;s Advice:</strong> {visitPrescription.instructions}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* View Prescription Modal */}
+        {selectedRx && (
+          <PrescriptionViewModal
+            prescription={selectedRx}
+            patientName={myToken.patientName}
+            open={Boolean(selectedRx)}
+            onClose={() => setSelectedRx(null)}
+          />
+        )}
       </div>
     );
   }
@@ -220,14 +318,34 @@ export default function PatientLiveQueueCard() {
             </div>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
-            <Link
-              href="/patient/appointments"
-              className="py-2 px-3.5 rounded-xl bg-primary text-primary-fg text-xs font-semibold hover:brightness-105 transition shadow-sm"
-            >
-              Reschedule Visit →
-            </Link>
+            {matchingAppt ? (
+              <button
+                type="button"
+                onClick={() => setReschedulingPassedAppt(matchingAppt)}
+                className="py-2 px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+              >
+                <CalendarClock className="h-3.5 w-3.5" />
+                <span>Reschedule Passed Slot (Fee Waived)</span>
+              </button>
+            ) : (
+              <Link
+                href="/patient/appointments"
+                className="py-2 px-3.5 rounded-xl bg-primary text-primary-fg text-xs font-semibold hover:brightness-105 transition shadow-sm"
+              >
+                Reschedule Visit →
+              </Link>
+            )}
           </div>
         </div>
+
+        {/* Reschedule Modal for Passed Slot */}
+        {reschedulingPassedAppt && (
+          <RescheduleModal
+            a={reschedulingPassedAppt}
+            open={Boolean(reschedulingPassedAppt)}
+            onClose={() => setReschedulingPassedAppt(null)}
+          />
+        )}
       </div>
     );
   }
@@ -325,7 +443,7 @@ export default function PatientLiveQueueCard() {
             </div>
           </div>
           <span className="hidden sm:inline-flex px-2 py-1 rounded-lg bg-amber-200/80 dark:bg-amber-900/50 text-[11px] font-bold text-amber-900 dark:text-amber-200">
-            SMS Dispatched
+            Email &amp; Voice Alert Active
           </span>
         </div>
       )}
@@ -456,6 +574,33 @@ export default function PatientLiveQueueCard() {
         </div>
       </div>
 
+      {/* REAL-TIME PRESCRIPTION READY BANNER */}
+      {visitPrescription && (
+        <div className="mt-4 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/15 to-cyan-500/10 border border-emerald-500/30 dark:bg-emerald-950/40 dark:border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
+          <div className="flex items-center gap-2.5 text-emerald-900 dark:text-emerald-200">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 shrink-0">
+              <Pill className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="font-bold text-slate-900 dark:text-white">
+                Official Prescription Issued by Dr. {myToken.doctorName}
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {visitPrescription.medications.length} medication{visitPrescription.medications.length > 1 ? "s" : ""} prescribed • {visitPrescription.rxNumber}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedRx(visitPrescription)}
+            className="py-1.5 px-3.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition shadow-xs flex items-center justify-center gap-1.5 shrink-0"
+          >
+            <Printer className="h-3.5 w-3.5" />
+            <span>View Digital Rx</span>
+          </button>
+        </div>
+      )}
+
       {/* 45-SECOND PRE-CONSULTATION AI CHECK-IN STRIP */}
       <div className="mt-4">
         {myToken.triageBrief ? (
@@ -517,7 +662,22 @@ export default function PatientLiveQueueCard() {
           token={myToken}
           open={triageOpen}
           onClose={() => setTriageOpen(false)}
-          onSubmit={(brief) => submitTriageBrief(myToken.id, brief)}
+          onSubmit={(brief) => {
+            submitTriageBrief(myToken.id, brief);
+            if (myToken.appointmentId) {
+              saveTriageBrief(myToken.appointmentId, brief);
+            }
+          }}
+        />
+      )}
+
+      {/* Prescription View Modal */}
+      {selectedRx && (
+        <PrescriptionViewModal
+          prescription={selectedRx}
+          patientName={myToken.patientName}
+          open={Boolean(selectedRx)}
+          onClose={() => setSelectedRx(null)}
         />
       )}
     </div>

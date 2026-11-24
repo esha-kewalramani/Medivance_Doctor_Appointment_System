@@ -269,7 +269,7 @@ export default function DoctorQueueController() {
       toast(
         "success",
         "Next Patient Alerted (Fast-Track)",
-        `Token #${nextWaitingPatient.tokenNumber} (${nextWaitingPatient.patientName}) notified via SMS/Email to proceed to ${nextWaitingPatient.room}.`
+        `Token #${nextWaitingPatient.tokenNumber} (${nextWaitingPatient.patientName}) notified via Email & Live Queue to proceed to ${nextWaitingPatient.room}.`
       );
     }
 
@@ -319,7 +319,7 @@ export default function DoctorQueueController() {
               <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Hands-free 30-min auto-pacing with synthetic voice announcements & patient SMS alerts
+              Hands-free 30-min auto-pacing with synthetic voice announcements &amp; live patient alerts
             </p>
           </div>
         </div>
@@ -566,7 +566,7 @@ export default function DoctorQueueController() {
                 <span>Next in line: <strong>Token #{nextWaitingPatient.tokenNumber}</strong> ({nextWaitingPatient.patientName})</span>
               </span>
               <span className="text-[11px] text-teal-700 dark:text-cyan-400 font-semibold">
-                Will receive instant SMS & Announcement if session finishes early
+                Will receive instant notification &amp; live announcement if session finishes early
               </span>
             </div>
           )}
@@ -849,7 +849,7 @@ export default function DoctorQueueController() {
             <div className="mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-500/30 text-xs text-amber-900 dark:text-amber-200">
               {nextWaitingPatient ? (
                 <span>
-                  ⚡ Marking complete now will automatically dispatch an immediate <strong>Fast-Track SMS & Email</strong> to{" "}
+                  ⚡ Marking complete now will automatically dispatch an immediate <strong>Fast-Track Notification &amp; Email</strong> to{" "}
                   <strong>{nextWaitingPatient.patientName} (Token #{nextWaitingPatient.tokenNumber})</strong> telling them you are ready early!
                 </span>
               ) : (

@@ -58,6 +58,13 @@ export interface Appointment {
   status: AppointmentStatus;
   createdAt: string;
   notes?: string;
+  triageBrief?: TriageBrief;
+  soapNote?: {
+    subjective: string;
+    objective: string;
+    assessment: string;
+    plan: string;
+  };
   isGuest?: boolean;
   guestDetails?: {
     name: string;

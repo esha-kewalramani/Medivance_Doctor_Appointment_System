@@ -73,7 +73,7 @@ export async function loadAll(sb: SupabaseClient, role: Role | undefined, defaul
     bloodGroup: r.blood_group ?? undefined, registeredAt: r.registered_at,
   }));
   const appointments: Appointment[] = ((appt.data ?? []) as Row[]).map((r) => ({
-    id: r.id, ref: r.ref, patientId: r.patient_id, doctorId: r.doctor_id, date: r.date, time: r.time, reason: r.reason, status: r.status, createdAt: r.created_at, notes: r.notes ?? undefined,
+    id: r.id, ref: r.ref, patientId: r.patient_id, doctorId: r.doctor_id, date: r.date, time: r.time, reason: r.reason, status: r.status === "pending" ? "approved" : r.status, createdAt: r.created_at, notes: r.notes ?? undefined,
   }));
   // other people's booked times (no patient data) so the slot picker can grey them out
   if (role !== "admin") {

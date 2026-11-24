@@ -1,17 +1,22 @@
 "use client";
 import { useMemo, useState } from "react";
-import { CalendarClock, Clock, History } from "lucide-react";
+import { CalendarClock, CheckCircle2, Clock, History, Sparkles } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { useApp } from "@/hooks/useApp";
 import { addDays, fmtDate, fmtTime, todayISO, weekdayOf } from "@/lib/utilities";
+import { isPassedSlot } from "@/lib/utilities/appointments";
 import { confirmDialog, toast } from "@/components/notifications/alerts";
 import { Appointment } from "@/types";
 
-/** Doctor-initiated rescheduling. The database re-checks everything (ownership, availability, conflicts, status) and keeps the history. */
+/** Doctor & Patient rescheduling modal. Rescheduling passed appointments has fee waived. */
 export default function RescheduleModal({ a, open, onClose }: { a: Appointment; open: boolean; onClose: () => void }) {
-  const { data, doctorById, patientById, getSlots, rescheduleAppointment } = useApp();
+  const { data, session, doctorById, patientById, getSlots, rescheduleAppointment } = useApp();
   const doctor = doctorById(a.doctorId);
   const patient = patientById(a.patientId);
+  const isDoctor = session?.role === "doctor";
+  const isPatient = session?.role === "patient";
+  const isPassed = isPassedSlot(a);
+
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [reason, setReason] = useState("");
@@ -27,23 +32,42 @@ export default function RescheduleModal({ a, open, onClose }: { a: Appointment; 
 
   const submit = async () => {
     if (busy || !date || !time) return;
-    const ok = await confirmDialog("Reschedule this appointment?", `${patient?.name ?? "The patient"}: ${fmtDate(a.date)} ${fmtTime(a.time)}  ->  ${fmtDate(date)} ${fmtTime(time)}. The patient will be notified.`, "Yes, reschedule");
+    const promptTitle = isPatient ? "Confirm Free Reschedule?" : "Reschedule this appointment?";
+    const promptMsg = isPatient
+      ? `Move your passed visit with ${doctor?.name || "Doctor"} to ${fmtDate(date)} at ${fmtTime(time)}? Your fee is 100% credited (Rs 0 due).`
+      : `${patient?.name ?? "The patient"}: ${fmtDate(a.date)} ${fmtTime(a.time)} -> ${fmtDate(date)} ${fmtTime(time)}. The patient will be notified.`;
+
+    const ok = await confirmDialog(promptTitle, promptMsg, isPatient ? "Yes, confirm free reschedule" : "Yes, reschedule");
     if (!ok) return;
+
     setBusy(true);
     const r = await rescheduleAppointment(a.id, date, time, reason);
     setBusy(false);
     if (!r.ok) { toast("error", "Could not reschedule", r.error); if (r.code === "23505") setTime(""); return; }
-    toast("success", "Appointment rescheduled", `${a.ref} is now on ${fmtDate(date)} at ${fmtTime(time)}.`);
+    toast("success", "Appointment Rescheduled", `${a.ref} is now scheduled for ${fmtDate(date)} at ${fmtTime(time)} (No payment charged).`);
     setDate(""); setTime(""); setReason(""); onClose();
   };
 
   return (
-    <Modal open={open} onClose={close} title="Reschedule appointment" wide>
+    <Modal open={open} onClose={close} title={isPatient ? "Reschedule Passed Slot (Fee Waived)" : "Reschedule appointment"} wide>
       <div className="space-y-4">
+        {isPatient && isPassed && (
+          <div className="rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-transparent p-4 text-xs dark:border-emerald-500/30 dark:bg-[#032025]/60 shadow-sm">
+            <div className="flex items-center gap-2 font-bold text-sm text-emerald-700 dark:text-emerald-300">
+              <Sparkles className="h-4 w-4 text-emerald-500" />
+              <span>Rescheduling Courtesy: 100% Fee Waived (Rs 0)</span>
+            </div>
+            <p className="mt-1 text-slate-600 dark:text-slate-300 leading-relaxed">
+              Because your scheduled slot on <strong>{fmtDate(a.date)} at {fmtTime(a.time)}</strong> has elapsed, your consultation fee has been fully retained. You can choose any available date and slot below without making any new payment!
+            </p>
+          </div>
+        )}
+
         <div className="rounded-xl border border-line/50 bg-primary/5 p-3 text-sm">
           <p className="font-semibold">{patient?.name ?? "Patient"} <span className="font-normal text-muted">- {a.ref}</span></p>
-          <p className="text-muted">Currently {fmtDate(a.date)} at {fmtTime(a.time)} with {doctor?.name ?? "you"}</p>
-          {pay && <p className="mt-1 text-xs text-ok">This appointment is already PAID ({pay.transactionId}). The patient will not be charged again and the receipt stays valid.</p>}
+          <p className="text-muted">Original slot: {fmtDate(a.date)} at {fmtTime(a.time)} with {doctor?.name ?? (isDoctor ? "you" : "Doctor")}</p>
+          {isPassed && <p className="mt-1 text-xs text-ok font-medium flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Re-booking fee is completely waived for this passed appointment.</p>}
+          {pay && !isPassed && <p className="mt-1 text-xs text-ok">This appointment is already PAID ({pay.transactionId}). The patient will not be charged again and the receipt stays valid.</p>}
         </div>
 
         <div>
@@ -83,13 +107,15 @@ export default function RescheduleModal({ a, open, onClose }: { a: Appointment; 
         )}
 
         <div>
-          <label className="label" htmlFor="rs-reason">3. Reason for rescheduling (optional, shown to the patient)</label>
-          <textarea id="rs-reason" rows={2} maxLength={500} className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="For example: emergency surgery, hospital meeting" />
+          <label className="label" htmlFor="rs-reason">3. Reason / Notes (optional)</label>
+          <textarea id="rs-reason" rows={2} maxLength={500} className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder={isPatient ? "For example: Was delayed in traffic, couldn't make original slot" : "For example: Emergency surgery, hospital meeting"} />
         </div>
 
         <div className="flex flex-wrap justify-end gap-2">
           <button className="btn-ghost" onClick={close} disabled={busy}>Close</button>
-          <button className="btn-primary" disabled={!date || !time || busy} onClick={submit}><CalendarClock className="h-4 w-4" /> {busy ? "Saving..." : "Confirm reschedule"}</button>
+          <button className="btn-primary" disabled={!date || !time || busy} onClick={submit}>
+            <CalendarClock className="h-4 w-4" /> {busy ? "Saving..." : isPatient ? "Confirm Free Reschedule (Rs 0)" : "Confirm reschedule"}
+          </button>
         </div>
 
         {history.length > 0 && (
@@ -98,9 +124,9 @@ export default function RescheduleModal({ a, open, onClose }: { a: Appointment; 
             <ul className="space-y-1.5 text-xs text-muted">
               {history.map((h) => (
                 <li key={h.id} className="rounded-lg border border-line/30 px-3 py-2">
-                  {fmtDate(h.oldDate)} {fmtTime(h.oldTime)} &rarr; <b className="text-fg">{fmtDate(h.newDate)} {fmtTime(h.newTime)}</b>
+                  <span>{fmtDate(h.oldDate)} {fmtTime(h.oldTime)} &rarr; <b className="text-fg">{fmtDate(h.newDate)} {fmtTime(h.newTime)}</b></span>
                   <span className="ml-2">({new Date(h.createdAt).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })})</span>
-                  {h.reason && <span className="block">Reason: {h.reason}</span>}
+                  {h.reason && <p className="mt-0.5 text-[11px] italic">"{h.reason}"</p>}
                 </li>
               ))}
             </ul>

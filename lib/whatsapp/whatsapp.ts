@@ -1,11 +1,11 @@
 /**
  * MEDIVANCE WhatsApp Dispatch Engine
- * Supports Meta WhatsApp Cloud API, Twilio WhatsApp, and direct wa.me one-click dispatch.
+ * 100% Direct One-Click WhatsApp Dispatch (wa.me) - Requires zero external API keys.
  */
 
 export interface SendWhatsAppParams {
   to: string;
-  message: string;
+  message?: string;
   patientName?: string;
   doctorName?: string;
   appointmentDate?: string;
@@ -18,11 +18,9 @@ export interface SendWhatsAppParams {
 export interface WhatsAppDispatchResult {
   ok: boolean;
   id?: string;
-  simulated?: boolean;
-  error?: string;
-  formattedTo?: string;
   whatsappUrl?: string;
-  provider: "meta" | "twilio" | "direct";
+  formattedTo?: string;
+  provider: "direct";
 }
 
 /**
@@ -93,116 +91,15 @@ export function buildWhatsAppMessage(params: SendWhatsAppParams): string {
 }
 
 /**
- * Dispatches WhatsApp message via Meta Cloud API, Twilio WhatsApp, or Direct Link
+ * Generates direct one-click WhatsApp dispatch without any external API keys
  */
 export async function sendWhatsApp(params: SendWhatsAppParams): Promise<WhatsAppDispatchResult> {
   const formattedTo = formatWhatsAppNumber(params.to);
   const text = buildWhatsAppMessage(params);
   const directUrl = getWhatsAppDirectUrl(params.to, text);
 
-  if (!formattedTo || formattedTo.length < 8) {
-    return {
-      ok: false,
-      provider: "direct",
-      error: `Invalid phone number format for WhatsApp: "${params.to}".`,
-      whatsappUrl: directUrl,
-    };
-  }
-
-  // 1. Meta WhatsApp Cloud API Check
-  const metaToken = process.env.WHATSAPP_ACCESS_TOKEN;
-  const metaPhoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-
-  if (metaToken && metaPhoneId) {
-    try {
-      const url = `https://graph.facebook.com/v21.0/${metaPhoneId}/messages`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${metaToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          recipient_type: "individual",
-          to: formattedTo,
-          type: "text",
-          text: {
-            preview_url: true,
-            body: text,
-          },
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        console.error("[Meta WhatsApp Error]", data);
-        return {
-          ok: false,
-          provider: "meta",
-          error: data.error?.message || "Meta WhatsApp Cloud API error",
-          formattedTo,
-          whatsappUrl: directUrl,
-        };
-      }
-
-      return {
-        ok: true,
-        id: data.messages?.[0]?.id || `meta-${Date.now()}`,
-        provider: "meta",
-        formattedTo,
-        whatsappUrl: directUrl,
-      };
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : "Meta WhatsApp network error";
-      console.error("[Meta WhatsApp Fetch Error]", errorMsg);
-    }
-  }
-
-  // 2. Twilio WhatsApp Check
-  const twilioSid = process.env.TWILIO_ACCOUNT_SID;
-  const twilioToken = process.env.TWILIO_AUTH_TOKEN;
-  const twilioWaNumber = process.env.TWILIO_WHATSAPP_NUMBER || "whatsapp:+14155238886";
-
-  if (twilioSid && twilioToken) {
-    try {
-      const url = `https://api.twilio.com/2010-04-01/Accounts/${twilioSid}/Messages.json`;
-      const bodyParams = new URLSearchParams({
-        From: twilioWaNumber,
-        To: `whatsapp:+${formattedTo}`,
-        Body: text,
-      });
-
-      const basicAuth = Buffer.from(`${twilioSid}:${twilioToken}`).toString("base64");
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${basicAuth}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: bodyParams.toString(),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        return {
-          ok: true,
-          id: data.sid,
-          provider: "twilio",
-          formattedTo,
-          whatsappUrl: directUrl,
-        };
-      }
-    } catch (err: unknown) {
-      console.error("[Twilio WhatsApp Fetch Error]", err);
-    }
-  }
-
-  // 3. Fallback / Direct Instant WhatsApp Simulation
-  console.info(`[WhatsApp Ready] Direct WhatsApp URL ready for +${formattedTo}: ${directUrl}`);
   return {
     ok: true,
-    simulated: true,
     provider: "direct",
     id: `wa-direct-${Date.now()}`,
     formattedTo,

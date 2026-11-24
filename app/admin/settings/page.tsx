@@ -89,9 +89,8 @@ export default function AdminSettingsPage() {
           </div>
           <div className="card space-y-4 p-5">
             <h2 className="font-bold">Notifications</h2>
-            <Toggle checked={s.emailNotifications} onChange={(v) => updateSettings({ emailNotifications: v })} label="Email notifications" hint="Simulated in this frontend phase." />
-            <Toggle checked={s.smsNotifications} onChange={(v) => updateSettings({ smsNotifications: v })} label="SMS notifications" />
-            <Toggle checked={s.appointmentReminders} onChange={(v) => updateSettings({ appointmentReminders: v })} label="Appointment reminders" />
+            <Toggle checked={s.emailNotifications} onChange={(v) => updateSettings({ emailNotifications: v })} label="Email notifications" hint="Real-time delivery powered by verified Resend engine." />
+            <Toggle checked={s.appointmentReminders} onChange={(v) => updateSettings({ appointmentReminders: v })} label="Appointment reminders (24h & 30m prior)" />
           </div>
           <div className="card space-y-4 p-5">
             <h2 className="font-bold">System configuration</h2>

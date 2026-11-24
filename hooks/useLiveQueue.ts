@@ -74,6 +74,9 @@ export function useLiveQueue() {
         if (existingToken.status === "waiting" && isPastSlot) {
           return { ...existingToken, status: "passed" };
         }
+        if (a.triageBrief && !existingToken.triageBrief) {
+          return { ...existingToken, triageBrief: a.triageBrief };
+        }
         return existingToken;
       }
 
@@ -91,6 +94,7 @@ export function useLiveQueue() {
         room: `Room 102 - OPD Heart Wing`,
         status: a.status === "completed" ? "completed" : isPastSlot ? "passed" : "waiting",
         estimatedWaitMinutes: Math.max(5, (tokenSeq - 10) * 15),
+        triageBrief: a.triageBrief,
       };
     });
 
@@ -220,7 +224,7 @@ export function useLiveQueue() {
       );
 
       if (nextWaiting) {
-        // Dispatches immediate Fast-Track SMS/Email to next customer
+        // Dispatches immediate Fast-Track Email/Notification to next customer
         sendNextInLineAlert(nextWaiting, isEarly);
         if (isEarly) {
           announcePatientCall(nextWaiting.tokenNumber, nextWaiting.patientName, `${nextWaiting.room}. Please get ready, doctor is free.`);
